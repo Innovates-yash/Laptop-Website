@@ -1,0 +1,91 @@
+═══════════════════════════════════════════════════════════
+  VOLTEX - GITHUB PUSH COMMANDS
+═══════════════════════════════════════════════════════════
+
+STEP 1: Open Command Prompt in voltex folder
+─────────────────────────────────────────────────────────
+• Navigate to voltex folder in File Explorer
+• Click in the address bar
+• Type: cmd
+• Press Enter
+
+
+STEP 2: Copy and paste these commands ONE BY ONE
+─────────────────────────────────────────────────────────
+
+git init
+
+git add .
+
+git commit -m "Initial commit: VOLTEX e-commerce platform with 3D animations"
+
+git remote add origin https://github.com/Innovates-yash/Laptop-Website.git
+
+git branch -M main
+
+git push -u origin main
+
+
+STEP 3: When asked for credentials
+─────────────────────────────────────────────────────────
+Username: Innovates-yash
+Password: [Your Personal Access Token]
+
+Get token from: https://github.com/settings/tokens
+• Click "Generate new token (classic)"
+• Name: VOLTEX Project
+• Select: repo (full control)
+• Copy the token and use as password
+
+
+STEP 4: Verify on GitHub
+─────────────────────────────────────────────────────────
+Go to: https://github.com/Innovates-yash/Laptop-Website
+• All files should be visible
+• README should display nicely
+• .env should NOT be visible (it's ignored)
+
+
+═══════════════════════════════════════════════════════════
+  FUTURE UPDATES
+═══════════════════════════════════════════════════════════
+
+After making changes:
+
+git add .
+git commit -m "feat: describe your changes"
+git push
+
+
+═══════════════════════════════════════════════════════════
+  TROUBLESHOOTING
+═══════════════════════════════════════════════════════════
+
+Error: "git is not recognized"
+→ Install Git from: https://git-scm.com/download/win
+
+Error: "remote origin already exists"
+→ Run: git remote remove origin
+→ Then: git remote add origin https://github.com/Innovates-yash/Laptop-Website.git
+
+Error: "Authentication failed"
+→ Use Personal Access Token, not your GitHub password
+
+Error: "failed to push some refs"
+→ Run: git pull origin main --rebase
+→ Then: git push
+
+
+═══════════════════════════════════════════════════════════
+  NEED MORE HELP?
+═══════════════════════════════════════════════════════════
+
+Read these files:
+• READY-FOR-GITHUB.md - Overview
+• PUSH-TO-GITHUB.md - Detailed instructions
+• GITHUB-CHECKLIST.md - Checklist
+
+
+═══════════════════════════════════════════════════════════
+  YOU'RE READY! 🚀
+═══════════════════════════════════════════════════════════

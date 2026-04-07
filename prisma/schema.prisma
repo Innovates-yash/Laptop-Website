@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  EMPLOYEE
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum EnquiryStatus {
+  NEW
+  READ
+  REPLIED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String   // hashed with bcrypt
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  orders    Order[]
+  employee  Employee?
+
+  @@map("users")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String   @db.Text
+  price       Float
+  stock       Int      @default(0)
+  category    String
+  specs       Json     // JSON object for specifications
+  modelUrl    String?  // 3D model file URL
+  images      String[] // Array of image URLs
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  orderItems      OrderItem[]
+  enquiries       CustomerEnquiry[]
+  salesRecords    SalesRecord[]
+  purchaseRecords PurchaseRecord[]
+
+  @@map("products")
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  status        OrderStatus @default(PENDING)
+  total         Float
+  paymentId     String?
+  paymentMethod String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+
+  // Relations
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model CustomerEnquiry {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  message   String        @db.Text
+  productId String?
+  status    EnquiryStatus @default(NEW)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Relations
+  product Product? @relation(fields: [productId], references: [id])
+
+  @@map("customer_enquiries")
+}
+
+model SalesRecord {
+  id         String   @id @default(cuid())
+  employeeId String
+  productId  String
+  quantity   Int
+  salePrice  Float
+  saleDate   DateTime @default(now())
+  notes      String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  // Relations
+  employee Employee @relation(fields: [employeeId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+
+  @@map("sales_records")
+}
+
+model PurchaseRecord {
+  id           String   @id @default(cuid())
+  employeeId   String
+  productId    String
+  quantity     Int
+  costPrice    Float
+  supplierName String
+  purchaseDate DateTime @default(now())
+  notes        String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  // Relations
+  employee Employee @relation(fields: [employeeId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+
+  @@map("purchase_records")
+}
+
+model Employee {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  department String
+  target     Float    @default(0) // monthly target
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salesRecords    SalesRecord[]
+  purchaseRecords PurchaseRecord[]
+
+  @@map("employees")
+}
