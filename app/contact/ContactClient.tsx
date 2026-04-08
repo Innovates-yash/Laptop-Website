@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PageWrapper from '@/components/layout/PageWrapper'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import gsap from 'gsap'
 
 const enquirySchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -30,9 +29,45 @@ export default function ContactClient() {
     resolver: zodResolver(enquirySchema),
   })
 
+  // GSAP entrance animation
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+
+    const init = async () => {
+      const { gsap } = await import('gsap')
+
+      gsap.from('.contact-header', {
+        opacity: 0,
+        y: 30,
+        duration: 0.6,
+        ease: 'power2.out',
+      })
+
+      gsap.from('.form-field', {
+        opacity: 0,
+        y: 25,
+        duration: 0.5,
+        stagger: 0.08,
+        ease: 'power2.out',
+        delay: 0.2,
+      })
+
+      gsap.from('.contact-info-card', {
+        opacity: 0,
+        x: 40,
+        duration: 0.5,
+        stagger: 0.1,
+        ease: 'power2.out',
+        delay: 0.3,
+      })
+    }
+
+    init()
+  }, [])
+
   const onSubmit = async (data: EnquiryForm) => {
     setLoading(true)
-    
+
     try {
       const response = await fetch('/api/enquiry', {
         method: 'POST',
@@ -43,12 +78,13 @@ export default function ContactClient() {
       if (response.ok) {
         setSubmitted(true)
         reset()
-        
+
+        const { gsap } = await import('gsap')
         gsap.from('.success-message', {
-          scale: 0,
+          scale: 0.8,
           opacity: 0,
-          duration: 0.5,
-          ease: 'back.out',
+          duration: 0.6,
+          ease: 'back.out(1.7)',
         })
       }
     } catch (error) {
@@ -61,7 +97,7 @@ export default function ContactClient() {
   return (
     <PageWrapper>
       <div className="min-h-screen bg-surface">
-        <section className="py-20 px-12 md:px-24 border-b border-outline-variant/20">
+        <section className="contact-header py-20 px-12 md:px-24 border-b border-outline-variant/20">
           <div className="font-mono text-primary tracking-wide-tech text-xs mb-4">
             // GET IN TOUCH
           </div>
@@ -78,14 +114,14 @@ export default function ContactClient() {
             <div>
               {!submitted ? (
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                  <div>
+                  <div className="form-field">
                     <label className="font-mono text-xs tracking-widest text-on-surface mb-3 block">
                       FULL NAME *
                     </label>
                     <input
                       {...register('name')}
                       type="text"
-                      className="w-full bg-surface-container-low border border-outline-variant px-6 py-4 font-body text-on-surface focus:border-primary focus:outline-none transition-colors"
+                      className="w-full bg-surface-container-low border border-outline-variant/30 px-6 py-4 font-body text-on-surface focus:border-primary focus:shadow-[0_0_0_1px_rgba(0,229,255,0.3)] focus:outline-none transition-all duration-300"
                       placeholder="John Doe"
                     />
                     {errors.name && (
@@ -93,14 +129,14 @@ export default function ContactClient() {
                     )}
                   </div>
 
-                  <div>
+                  <div className="form-field">
                     <label className="font-mono text-xs tracking-widest text-on-surface mb-3 block">
                       EMAIL ADDRESS *
                     </label>
                     <input
                       {...register('email')}
                       type="email"
-                      className="w-full bg-surface-container-low border border-outline-variant px-6 py-4 font-body text-on-surface focus:border-primary focus:outline-none transition-colors"
+                      className="w-full bg-surface-container-low border border-outline-variant/30 px-6 py-4 font-body text-on-surface focus:border-primary focus:shadow-[0_0_0_1px_rgba(0,229,255,0.3)] focus:outline-none transition-all duration-300"
                       placeholder="john@example.com"
                     />
                     {errors.email && (
@@ -108,14 +144,14 @@ export default function ContactClient() {
                     )}
                   </div>
 
-                  <div>
+                  <div className="form-field">
                     <label className="font-mono text-xs tracking-widest text-on-surface mb-3 block">
                       PHONE NUMBER *
                     </label>
                     <input
                       {...register('phone')}
                       type="tel"
-                      className="w-full bg-surface-container-low border border-outline-variant px-6 py-4 font-body text-on-surface focus:border-primary focus:outline-none transition-colors"
+                      className="w-full bg-surface-container-low border border-outline-variant/30 px-6 py-4 font-body text-on-surface focus:border-primary focus:shadow-[0_0_0_1px_rgba(0,229,255,0.3)] focus:outline-none transition-all duration-300"
                       placeholder="+1 (555) 000-0000"
                     />
                     {errors.phone && (
@@ -123,13 +159,13 @@ export default function ContactClient() {
                     )}
                   </div>
 
-                  <div>
+                  <div className="form-field">
                     <label className="font-mono text-xs tracking-widest text-on-surface mb-3 block">
                       INTERESTED IN (OPTIONAL)
                     </label>
                     <select
                       {...register('productId')}
-                      className="w-full bg-surface-container-low border border-outline-variant px-6 py-4 font-body text-on-surface focus:border-primary focus:outline-none transition-colors"
+                      className="w-full bg-surface-container-low border border-outline-variant/30 px-6 py-4 font-body text-on-surface focus:border-primary focus:shadow-[0_0_0_1px_rgba(0,229,255,0.3)] focus:outline-none transition-all duration-300"
                     >
                       <option value="">Select a product</option>
                       <option value="nexus-16">VOLTEX NEXUS-16</option>
@@ -139,14 +175,14 @@ export default function ContactClient() {
                     </select>
                   </div>
 
-                  <div>
+                  <div className="form-field">
                     <label className="font-mono text-xs tracking-widest text-on-surface mb-3 block">
                       MESSAGE *
                     </label>
                     <textarea
                       {...register('message')}
                       rows={6}
-                      className="w-full bg-surface-container-low border border-outline-variant px-6 py-4 font-body text-on-surface focus:border-primary focus:outline-none transition-colors resize-none"
+                      className="w-full bg-surface-container-low border border-outline-variant/30 px-6 py-4 font-body text-on-surface focus:border-primary focus:shadow-[0_0_0_1px_rgba(0,229,255,0.3)] focus:outline-none transition-all duration-300 resize-none"
                       placeholder="Tell us about your requirements..."
                     />
                     {errors.message && (
@@ -157,11 +193,11 @@ export default function ContactClient() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-primary-container text-on-primary px-8 py-5 font-mono font-bold tracking-widest text-xs hover:shadow-[0_0_30px_rgba(0,229,255,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                    className="form-field w-full magnetic-btn bg-primary-container text-on-primary px-8 py-5 font-mono font-bold tracking-widest text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                   >
                     {loading ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
                         SENDING...
                       </>
                     ) : (
@@ -174,8 +210,8 @@ export default function ContactClient() {
                 </form>
               ) : (
                 <div className="success-message glass-panel p-12 text-center">
-                  <div className="w-20 h-20 bg-tertiary-container rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="material-symbols-outlined text-4xl text-on-tertiary-container">
+                  <div className="w-20 h-20 bg-primary/10 border border-primary/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="material-symbols-outlined text-4xl text-primary">
                       check_circle
                     </span>
                   </div>
@@ -185,7 +221,7 @@ export default function ContactClient() {
                   </p>
                   <button
                     onClick={() => setSubmitted(false)}
-                    className="border border-primary text-primary px-8 py-3 font-mono tracking-widest text-xs hover:bg-primary-container hover:text-on-primary transition-all"
+                    className="border border-primary text-primary px-8 py-3 font-mono tracking-widest text-xs hover:bg-primary/5 transition-all duration-300"
                   >
                     SEND ANOTHER MESSAGE
                   </button>
@@ -193,65 +229,49 @@ export default function ContactClient() {
               )}
             </div>
 
-            <div className="space-y-8">
-              <div className="glass-panel p-8">
-                <div className="flex items-start gap-6">
-                  <div className="w-12 h-12 border border-primary/30 flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-primary">location_on</span>
-                  </div>
-                  <div>
-                    <h4 className="font-mono text-xs tracking-widest text-primary mb-2">HEADQUARTERS</h4>
-                    <p className="font-body text-on-surface">
-                      123 Tech Boulevard<br />
-                      Silicon Valley, CA 94025<br />
-                      United States
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="glass-panel p-8">
-                <div className="flex items-start gap-6">
-                  <div className="w-12 h-12 border border-primary/30 flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-primary">mail</span>
-                  </div>
-                  <div>
-                    <h4 className="font-mono text-xs tracking-widest text-primary mb-2">EMAIL</h4>
-                    <p className="font-body text-on-surface">
-                      support@voltex.com<br />
-                      sales@voltex.com
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="glass-panel p-8">
-                <div className="flex items-start gap-6">
-                  <div className="w-12 h-12 border border-primary/30 flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-primary">phone</span>
-                  </div>
-                  <div>
-                    <h4 className="font-mono text-xs tracking-widest text-primary mb-2">PHONE</h4>
-                    <p className="font-body text-on-surface">
-                      +1 (800) VOLTEX-1<br />
-                      Mon-Fri: 9AM - 6PM PST
-                    </p>
+            <div className="space-y-6">
+              {[
+                {
+                  icon: 'location_on',
+                  title: 'HEADQUARTERS',
+                  content: '123 Tech Boulevard\nSilicon Valley, CA 94025\nUnited States',
+                },
+                {
+                  icon: 'mail',
+                  title: 'EMAIL',
+                  content: 'support@voltex.com\nsales@voltex.com',
+                },
+                {
+                  icon: 'phone',
+                  title: 'PHONE',
+                  content: '+1 (800) VOLTEX-1\nMon-Fri: 9AM - 6PM PST',
+                },
+              ].map((info, i) => (
+                <div key={i} className="contact-info-card glass-panel p-8 hover:border-primary/20 transition-all duration-300">
+                  <div className="flex items-start gap-6">
+                    <div className="w-12 h-12 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                      <span className="material-symbols-outlined text-primary">{info.icon}</span>
+                    </div>
+                    <div>
+                      <h4 className="font-mono text-xs tracking-widest text-primary mb-2">{info.title}</h4>
+                      <p className="font-body text-on-surface whitespace-pre-line">{info.content}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
 
-              <div className="glass-panel p-8">
+              <div className="contact-info-card glass-panel p-8">
                 <h4 className="font-mono text-xs tracking-widest text-primary mb-4">FOLLOW US</h4>
                 <div className="flex gap-4">
-                  <a href="#" className="w-10 h-10 border border-outline-variant hover:border-primary hover:bg-primary-container/10 transition-all flex items-center justify-center">
-                    <span className="material-symbols-outlined text-sm">link</span>
-                  </a>
-                  <a href="#" className="w-10 h-10 border border-outline-variant hover:border-primary hover:bg-primary-container/10 transition-all flex items-center justify-center">
-                    <span className="material-symbols-outlined text-sm">link</span>
-                  </a>
-                  <a href="#" className="w-10 h-10 border border-outline-variant hover:border-primary hover:bg-primary-container/10 transition-all flex items-center justify-center">
-                    <span className="material-symbols-outlined text-sm">link</span>
-                  </a>
+                  {['X', 'IN', 'GH'].map((label, i) => (
+                    <a
+                      key={i}
+                      href="#"
+                      className="w-10 h-10 border border-outline-variant/30 hover:border-primary hover:bg-primary/5 transition-all duration-300 flex items-center justify-center font-mono text-[10px] tracking-widest text-on-surface-variant hover:text-primary"
+                    >
+                      {label}
+                    </a>
+                  ))}
                 </div>
               </div>
             </div>

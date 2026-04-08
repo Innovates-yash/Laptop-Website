@@ -1,225 +1,185 @@
-'use client'
+"use client"
 
-import { useRef, useState, useEffect, Suspense, useMemo } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
-import gsap from 'gsap'
-import { useCanvasStore } from '@/store/canvasStore'
-import ModelSkeleton from '@/components/ui/ModelSkeleton'
-
-// Mini Laptop Model
-function MiniLaptop({ hovered }: { hovered: boolean }) {
-  const groupRef = useRef<THREE.Group>(null)
-  const haloRef = useRef<THREE.Mesh>(null)
-
-  useFrame((state) => {
-    if (!groupRef.current) return
-
-    // Auto-rotate
-    const speed = hovered ? 0.03 : 0.005
-    groupRef.current.rotation.y += speed
-
-    // Halo pulse
-    if (haloRef.current) {
-      haloRef.current.material.opacity = hovered ? 0.6 : 0
-    }
-  })
-
-  useEffect(() => {
-    if (!groupRef.current) return
-
-    // Scale animation on hover
-    gsap.to(groupRef.current.scale, {
-      x: hovered ? 1.08 : 1,
-      y: hovered ? 1.08 : 1,
-      z: hovered ? 1.08 : 1,
-      duration: 0.3,
-      ease: 'power2.out',
-    })
-  }, [hovered])
-
-  // Geometries
-  const baseGeometry = useMemo(() => new THREE.BoxGeometry(0.8, 0.04, 0.6), [])
-  const screenGeometry = useMemo(() => new THREE.BoxGeometry(0.8, 0.55, 0.02), [])
-  const displayGeometry = useMemo(() => new THREE.PlaneGeometry(0.72, 0.48), [])
-
-  // Materials
-  const baseMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: '#1a1d28',
-        metalness: 0.9,
-        roughness: 0.15,
-      }),
-    []
-  )
-
-  const screenMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: '#0a0c14',
-        metalness: 0.8,
-        roughness: 0.2,
-      }),
-    []
-  )
-
-  const displayMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: '#00e5ff',
-        emissive: '#00e5ff',
-        emissiveIntensity: 0.4,
-      }),
-    []
-  )
-
-  useEffect(() => {
-    return () => {
-      baseGeometry.dispose()
-      screenGeometry.dispose()
-      displayGeometry.dispose()
-      baseMaterial.dispose()
-      screenMaterial.dispose()
-      displayMaterial.dispose()
-    }
-  }, [baseGeometry, screenGeometry, displayGeometry, baseMaterial, screenMaterial, displayMaterial])
-
-  return (
-    <>
-      <group ref={groupRef} rotation={[0, Math.PI / 4, 0]}>
-        {/* Base */}
-        <mesh geometry={baseGeometry} material={baseMaterial} position={[0, 0, 0]} />
-
-        {/* Screen */}
-        <group position={[0, 0.3, -0.28]} rotation={[-Math.PI / 12, 0, 0]}>
-          <mesh geometry={screenGeometry} material={screenMaterial} />
-          <mesh geometry={displayGeometry} material={displayMaterial} position={[0, 0, 0.011]} />
-        </group>
-      </group>
-
-      {/* Halo ring */}
-      <mesh ref={haloRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.3, 0]}>
-        <ringGeometry args={[0.5, 0.6, 32]} />
-        <meshBasicMaterial color="#00e5ff" transparent opacity={0} side={THREE.DoubleSide} />
-      </mesh>
-    </>
-  )
-}
+import { useRef, useState, useEffect, memo } from "react"
+import Link from "next/link"
 
 interface ProductCard3DProps {
-  modelUrl?: string
   name: string
   price: number
   category: string
-  badge?: string
-  onClick?: () => void
+  modelUrl?: string
+  slug?: string
+  image?: string
 }
 
-export default function ProductCard3D({
-  modelUrl = '/models/laptop-default.glb',
+function ProductCard3DComponent({
   name,
   price,
   category,
-  badge,
-  onClick,
+  slug,
+  image,
 }: ProductCard3DProps) {
-  const [hovered, setHovered] = useState(false)
-  const [isInView, setIsInView] = useState(false)
-  const [shouldRender, setShouldRender] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
-  const { incrementCanvas, decrementCanvas, canRenderCanvas } = useCanvasStore()
+  const imageRef = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+  // Resolve fallback image based on category
+  const resolvedImage = image || (() => {
+    const images = [
+      '/images/products/ionela-mat-2WxnKStKQTs-unsplash.jpg',
+      '/images/products/kyle-sung-oQuP_XBjOMY-unsplash.jpg',
+      '/images/products/leap-design-rXGzpEeYAS0-unsplash.jpg',
+      '/images/products/muneeb-ali-arshad-_FpedyKWiHY-unsplash.jpg',
+    ]
+    const hash = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+    return images[hash % images.length]
+  })()
 
-  // Intersection Observer
+  const resolvedSlug = slug || name.toLowerCase().replace(/\s+/g, '-')
+
   useEffect(() => {
-    if (!cardRef.current || isMobile) return
+    const el = cardRef.current
+    if (!el) return
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsInView(entry.isIntersecting)
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.disconnect()
+        }
       },
-      { threshold: 0.1 }
+      { rootMargin: "100px", threshold: 0.1 }
     )
 
-    observer.observe(cardRef.current)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  // Mouse tilt effect
+  useEffect(() => {
+    const card = cardRef.current
+    const img = imageRef.current
+    if (!card || !img) return
+
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (prefersReduced) return
+
+    const onMouseMove = (e: MouseEvent) => {
+      const rect = card.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / rect.width - 0.5
+      const y = (e.clientY - rect.top) / rect.height - 0.5
+
+      card.style.transform = `perspective(800px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) translateY(-4px)`
+      img.style.transform = `scale(1.08) translateX(${x * -8}px) translateY(${y * -8}px)`
+    }
+
+    const onMouseLeave = () => {
+      card.style.transform = "perspective(800px) rotateY(0) rotateX(0) translateY(0)"
+      card.style.transition = "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
+      img.style.transform = "scale(1)"
+      img.style.transition = "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
+    }
+
+    const onMouseEnter = () => {
+      card.style.transition = "none"
+      img.style.transition = "none"
+    }
+
+    card.addEventListener("mouseenter", onMouseEnter, { passive: true })
+    card.addEventListener("mousemove", onMouseMove, { passive: true })
+    card.addEventListener("mouseleave", onMouseLeave, { passive: true })
 
     return () => {
-      if (cardRef.current) {
-        observer.unobserve(cardRef.current)
-      }
+      card.removeEventListener("mouseenter", onMouseEnter)
+      card.removeEventListener("mousemove", onMouseMove)
+      card.removeEventListener("mouseleave", onMouseLeave)
     }
-  }, [isMobile])
-
-  // Canvas rendering control
-  useEffect(() => {
-    if (isInView && canRenderCanvas && canRenderCanvas() && !isMobile) {
-      setShouldRender(true)
-      incrementCanvas()
-      return () => {
-        decrementCanvas()
-      }
-    } else {
-      setShouldRender(false)
-    }
-  }, [isInView, isMobile, canRenderCanvas, incrementCanvas, decrementCanvas])
+  }, [isVisible])
 
   return (
-    <div
-      ref={cardRef}
-      data-product-card
-      className={`group bg-surface-container-low border border-outline-variant/30 transition-all duration-500 cursor-pointer ${
-        hovered ? 'border-primary/50 shadow-[0_0_20px_rgba(0,229,255,0.2)]' : ''
-      }`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onClick={onClick}
-    >
-      {/* 3D Canvas or Static Image */}
-      <div className="relative overflow-hidden aspect-square bg-surface-container flex items-center justify-center">
-        {badge && (
-          <div className="absolute top-4 left-4 bg-primary-container text-on-primary px-3 py-1 font-mono text-[9px] tracking-widest z-10">
-            {badge}
-          </div>
-        )}
-
-        {isMobile || !shouldRender ? (
-          // Mobile: Static image
-          <div className="text-6xl">💻</div>
-        ) : (
-          // Desktop: 3D Canvas
-          <Canvas
-            dpr={[1, 1.5]}
-            camera={{ position: [0, 0.3, 1.5], fov: 50 }}
-            style={{ width: '100%', height: '220px' }}
+    <Link href={`/products/${resolvedSlug}`}>
+      <div
+        ref={cardRef}
+        data-product-card
+        className="group relative overflow-hidden"
+        style={{
+          opacity: isVisible ? 1 : 0,
+          transform: isVisible ? "translateY(0)" : "translateY(40px)",
+          transition: "opacity 0.7s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)",
+          willChange: "transform",
+          transformStyle: "preserve-3d",
+        }}
+      >
+        {/* Image */}
+        <div 
+          className="relative w-full overflow-hidden bg-surface-container-low"
+          style={{ height: "280px" }}
+        >
+          <div
+            ref={imageRef}
+            style={{
+              width: "100%",
+              height: "100%",
+              transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
           >
-            <Suspense fallback={null}>
-              <ambientLight intensity={0.5} />
-              <directionalLight position={[2, 2, 2]} intensity={1} />
-              <MiniLaptop hovered={hovered} />
-            </Suspense>
-          </Canvas>
-        )}
-      </div>
+            <img
+              src={resolvedImage}
+              alt={name}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+              loading="lazy"
+            />
+          </div>
 
-      {/* Product Info */}
-      <div className="p-8 space-y-4 border-t border-outline-variant/20">
-        <div className="font-mono text-[10px] tracking-widest text-primary uppercase">
-          {category}
-        </div>
-        <h4 className="font-syne font-bold text-xl">{name}</h4>
-        <div className="flex justify-between items-center">
-          <div className="flex flex-col">
-            <span className="font-bebas text-3xl tracking-wider text-primary">
-              ${price.toLocaleString()}
+          {/* Hover overlay */}
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent
+                       opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+          />
+
+          {/* Category badge */}
+          <div className="absolute top-4 left-4 bg-surface/70 backdrop-blur-sm px-3 py-1">
+            <span className="font-mono text-[10px] tracking-[3px] uppercase text-primary">
+              {category}
             </span>
           </div>
-          <button className="w-10 h-10 border border-outline-variant hover:bg-primary-container hover:text-on-primary hover:border-primary-container transition-all flex items-center justify-center">
-            <span className="material-symbols-outlined text-sm">shopping_cart</span>
-          </button>
+
+          {/* View button on hover */}
+          <div
+            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100
+                       transition-all duration-300 pointer-events-none"
+          >
+            <div
+              className="px-6 py-3 border border-white/40 backdrop-blur-sm
+                         translate-y-4 group-hover:translate-y-0 transition-transform duration-500"
+            >
+              <span className="font-mono text-xs tracking-[3px] text-white">VIEW</span>
+            </div>
+          </div>
         </div>
+
+        {/* Text content */}
+        <div className="p-6 bg-surface border-t border-outline-variant/10">
+          <h3 className="font-syne font-bold text-lg mb-2 group-hover:text-primary transition-colors duration-300">
+            {name}
+          </h3>
+          <p className="text-primary font-semibold text-xl">
+            ₹{price.toLocaleString("en-IN")}
+          </p>
+        </div>
+
+        {/* Bottom accent line */}
+        <div
+          className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-primary-container to-transparent
+                     w-0 group-hover:w-full transition-all duration-500"
+        />
       </div>
-    </div>
+    </Link>
   )
 }
+
+export default memo(ProductCard3DComponent)

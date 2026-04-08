@@ -1,94 +1,77 @@
-'use client'
+"use client"
 
-import { motion } from 'framer-motion'
-import { usePathname } from 'next/navigation'
-import { ReactNode, useEffect } from 'react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useEffect, useRef } from "react"
+import { usePathname } from "next/navigation"
 
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger)
-}
-
-interface PageTransitionProps {
-  children: ReactNode
-}
-
-export default function PageTransition({ children }: PageTransitionProps) {
+export default function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const isFirstRender = useRef(true)
 
-  // Scroll-triggered animations
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (prefersReduced) return
+    const overlay = overlayRef.current
+    const content = contentRef.current
+    if (!overlay || !content) return
 
-    const elements = document.querySelectorAll('.animate-on-scroll')
-    if (!elements || elements.length === 0) return
-
-    elements.forEach((element) => {
-      gsap.fromTo(
-        element,
-        {
-          opacity: 0,
-          y: 30,
-        },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.5,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: element,
-            start: 'top 85%',
-            toggleActions: 'play none none none',
-          },
-        }
-      )
-
-      // Stagger children
-      const children = element.querySelectorAll('.animate-on-scroll-child')
-      if (children.length > 0) {
-        gsap.fromTo(
-          children,
-          {
-            opacity: 0,
-            y: 20,
-          },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.4,
-            ease: 'power2.out',
-            stagger: 0.08,
-            scrollTrigger: {
-              trigger: element,
-              start: 'top 85%',
-              toggleActions: 'play none none none',
-            },
-          }
-        )
-      }
-    })
-
-    return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill())
+    // Check for reduced motion
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      overlay.style.scaleX = '0'
+      content.style.opacity = '1'
+      return
     }
+
+    // Skip the very first render (loading screen handles that)
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      content.style.opacity = '1'
+      overlay.style.transform = 'scaleX(0)'
+      return
+    }
+
+    // Page transition animation
+    const animate = async () => {
+      const { gsap } = await import('gsap')
+
+      const tl = gsap.timeline()
+
+      // Overlay sweeps in then out
+      tl.set(overlay, { scaleX: 1, transformOrigin: "left center" })
+      tl.to(overlay, {
+        scaleX: 0,
+        transformOrigin: "right center",
+        duration: 0.6,
+        ease: "power3.inOut",
+      })
+      tl.fromTo(
+        content,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" },
+        "-=0.3"
+      )
+    }
+
+    animate()
   }, [pathname])
 
   return (
-    <motion.div
-      key={pathname}
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
-      transition={{
-        duration: 0.35,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-    >
-      {children}
-    </motion.div>
+    <div style={{ position: "relative" }}>
+      {/* Transition overlay */}
+      <div
+        ref={overlayRef}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "linear-gradient(90deg, var(--color-accent, #00e5ff), var(--color-primary-fixed-dim, #00daf3))",
+          zIndex: 9990,
+          transformOrigin: "right center",
+          transform: "scaleX(0)",
+          pointerEvents: "none",
+        }}
+      />
+      <div ref={contentRef} style={{ opacity: 1 }}>
+        {children}
+      </div>
+    </div>
   )
 }

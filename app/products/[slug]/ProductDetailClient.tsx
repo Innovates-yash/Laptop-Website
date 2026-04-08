@@ -1,10 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import PageWrapper from '@/components/layout/PageWrapper'
-import LaptopViewer from '@/components/3d/LaptopViewer'
 import { useCartStore } from '@/store/cartStore'
-import gsap from 'gsap'
+import { gsap } from 'gsap'
+import { ModelLoadingSkeleton } from '@/components/3d/ModelLoadingSkeleton'
+
+const LaptopViewer360 = dynamic(() => import('@/components/3d/LaptopViewer360'), {
+  ssr: false,
+  loading: () => <ModelLoadingSkeleton />
+})
 
 interface Product {
   id: string
@@ -25,19 +31,45 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   const addItem = useCartStore((state) => state.addItem)
 
   useEffect(() => {
-    gsap.from('.product-viewer', {
-      y: 100,
-      opacity: 0,
-      duration: 1,
-      ease: 'power3.out',
+    const ctx = gsap.context(() => {
+      gsap.from('.product-viewer', {
+        y: 100,
+        opacity: 0,
+        duration: 1,
+        ease: 'power3.out',
+      })
+      gsap.from('.product-name', {
+        x: -40,
+        opacity: 0,
+        duration: 0.6,
+        ease: 'power2.out',
+        delay: 0.3,
+      })
+      gsap.from('.product-price', {
+        opacity: 0,
+        y: 20,
+        duration: 0.4,
+        delay: 0.5,
+      })
+      gsap.from('.spec-row', {
+        opacity: 0,
+        x: -20,
+        duration: 0.4,
+        stagger: 0.05,
+        delay: 0.6,
+        ease: 'power2.out',
+      })
+      gsap.from('.product-cta', {
+        opacity: 0,
+        scale: 0.85,
+        duration: 0.5,
+        stagger: 0.1,
+        ease: 'back.out(1.4)',
+        delay: 0.8,
+      })
     })
-    gsap.from('.product-info', {
-      x: 50,
-      opacity: 0,
-      duration: 1,
-      delay: 0.3,
-      ease: 'power3.out',
-    })
+
+    return () => ctx.revert()
   }, [])
 
   const handleAddToCart = () => {
@@ -63,9 +95,10 @@ export default function ProductDetailClient({ product }: { product: Product }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
           {/* Left: 3D Viewer */}
           <div className="product-viewer relative bg-surface-container-lowest flex items-center justify-center p-12">
-            <div className="w-full h-[600px]">
-              <LaptopViewer modelUrl={product.modelUrl || '/models/laptop-default.glb'} />
-            </div>
+            <LaptopViewer360 
+              modelUrl={product.modelUrl || '/models/laptop-2.glb'}
+              fallbackImage={product.images[0]}
+            />
             <button
               onClick={() => setFullscreen(true)}
               className="absolute bottom-8 right-8 bg-primary-container text-on-primary px-6 py-3 font-mono text-xs tracking-widest hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all flex items-center gap-2"
@@ -81,11 +114,11 @@ export default function ProductDetailClient({ product }: { product: Product }) {
               // {product.category.toUpperCase()}
             </div>
             
-            <h1 className="font-syne font-extrabold text-5xl md:text-6xl mb-6">
+            <h1 className="product-name font-syne font-extrabold text-5xl md:text-6xl mb-6">
               {product.name}
             </h1>
 
-            <div className="font-bebas text-5xl text-primary mb-8">
+            <div className="product-price font-bebas text-5xl text-primary mb-8">
               ${product.price.toLocaleString()}
             </div>
 
@@ -104,7 +137,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                 </summary>
                 <div className="mt-6 space-y-3 font-body text-sm">
                   {product.specs && Object.entries(product.specs).map(([key, value]) => (
-                    <div key={key} className="flex justify-between border-b border-outline-variant/20 pb-2">
+                    <div key={key} className="spec-row flex justify-between border-b border-outline-variant/20 pb-2">
                       <span className="text-on-surface-variant">{key}</span>
                       <span className="text-on-surface font-medium">{value as string}</span>
                     </div>
@@ -115,7 +148,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
 
             {/* Quantity & Add to Cart */}
             <div className="flex gap-6 items-center mb-8">
-              <div className="flex items-center border border-outline-variant">
+              <div className="product-cta flex items-center border border-outline-variant">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="px-4 py-3 hover:bg-surface-container-low transition-colors"
@@ -135,7 +168,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
 
               <button
                 onClick={handleAddToCart}
-                className="add-to-cart-btn flex-1 bg-primary-container text-on-primary px-8 py-4 font-mono font-bold tracking-widest text-xs hover:shadow-[0_0_30px_rgba(0,229,255,0.4)] transition-all flex items-center justify-center gap-3"
+                className="product-cta add-to-cart-btn flex-1 bg-primary-container text-on-primary px-8 py-4 font-mono font-bold tracking-widest text-xs hover:shadow-[0_0_30px_rgba(0,229,255,0.4)] transition-all flex items-center justify-center gap-3"
               >
                 <span className="material-symbols-outlined">shopping_cart</span>
                 ADD TO CART
@@ -159,7 +192,10 @@ export default function ProductDetailClient({ product }: { product: Product }) {
             <span className="material-symbols-outlined">close</span>
           </button>
           <div className="w-full h-full p-12">
-            <LaptopViewer modelUrl={product.modelUrl || '/models/laptop-default.glb'} />
+            <LaptopViewer360 
+              modelUrl={product.modelUrl || '/models/laptop-2.glb'}
+              fallbackImage={product.images[0]}
+            />
           </div>
         </div>
       )}

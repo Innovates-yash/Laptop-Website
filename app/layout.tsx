@@ -1,28 +1,34 @@
 import type { Metadata } from 'next'
-import { Inter, Space_Grotesk, JetBrains_Mono, Syne, Bebas_Neue } from 'next/font/google'
+import { Inter, Syne } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { SessionProvider } from '@/components/SessionProvider'
-import CustomCursor from '@/components/ui/CustomCursor'
-import PageTransition from '@/components/layout/PageTransition'
+import dynamic from 'next/dynamic'
 
+// Lazy load heavy client components
+const SmoothScroll = dynamic(() => import('@/components/layout/SmoothScroll').then(mod => ({ default: mod.SmoothScroll })), {
+  ssr: false,
+})
+
+const CustomCursor = dynamic(() => import('@/components/ui/CustomCursor'), {
+  ssr: false,
+})
+
+const PageTransition = dynamic(() => import('@/components/layout/PageTransition'), {
+  ssr: false,
+})
+
+const LoadingScreen = dynamic(() => import('@/components/ui/LoadingScreen'), {
+  ssr: false,
+})
+
+// Fonts
 const inter = Inter({ 
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
-})
-
-const spaceGrotesk = Space_Grotesk({ 
-  subsets: ['latin'],
-  variable: '--font-space-grotesk',
-  display: 'swap',
-})
-
-const jetbrainsMono = JetBrains_Mono({ 
-  subsets: ['latin'],
-  variable: '--font-jetbrains-mono',
-  display: 'swap',
+  preload: true,
 })
 
 const syne = Syne({ 
@@ -30,13 +36,7 @@ const syne = Syne({
   weight: ['800'],
   variable: '--font-syne',
   display: 'swap',
-})
-
-const bebasNeue = Bebas_Neue({ 
-  subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-bebas',
-  display: 'swap',
+  preload: true,
 })
 
 export const metadata: Metadata = {
@@ -90,23 +90,25 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        {/* Material Symbols for icons */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
         />
       </head>
-      <body 
-        className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${syne.variable} ${bebasNeue.variable} font-body`}
-      >
-        <div className="orb-blue" />
-        <div className="orb-purple" />
+      <body className={`${inter.variable} ${syne.variable} font-body`}>
         <SessionProvider>
-          <CustomCursor />
-          <Navbar />
-          <PageTransition>
-            {children}
-          </PageTransition>
-          <Footer />
+          <SmoothScroll>
+            <CustomCursor />
+            <LoadingScreen />
+            <Navbar />
+            <PageTransition>
+              <main id="main-content">
+                {children}
+              </main>
+            </PageTransition>
+            <Footer />
+          </SmoothScroll>
         </SessionProvider>
       </body>
     </html>

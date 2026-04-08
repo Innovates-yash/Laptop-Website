@@ -70,7 +70,7 @@ async function main() {
   console.log('✅ Employee records created')
 
 
-  // Create Sample Products
+  // Create Sample Products with REAL ASSETS
   const products = [
     {
       name: 'VOLTEX NEXUS-16',
@@ -88,9 +88,8 @@ async function main() {
         battery: '22 hours',
         weight: '2.1kg',
       },
-      images: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuAjCt12GKDQMv_lvbCVHwB53awSuuutPCcX2dUbigZcLgYT0AmISsmlObhH3u83FgcAjTJ5_vrlCOi4mHGAYvE8GYwaK4r1dUwBElMXWhY-jR-gjVO7ZWC7MAY6M0EzEhMj_etqpo2VlNZZcwpdL8eJbMqIOec7oZ1ubY632Xa5yHUkePRQw518GcfGqsfNl9Hz0lQARKWPEhKdwHiAcgFUWKjmsV1CsC5YuiSE40xCoC3Ev6ub4DNjx2IFoV4ObMVeds6K_wnLyU4',
-      ],
+      images: ['/images/products/ionela-mat-2WxnKStKQTs-unsplash.jpg'],
+      modelUrl: '/models/laptop-1.glb',
       isActive: true,
     },
     {
@@ -109,9 +108,8 @@ async function main() {
         battery: '18 hours',
         weight: '1.2kg',
       },
-      images: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuDPb10p1bX2aoGmc5P5JnJNyCYGsMndNsShl8LFAIHQXfbgLG2Ocw8ZkTFZEC_eqwUxt_9QaEOc1ocir5y55_vldjp3uDOgvI8FgcYcsH1ICJFXvpur_sKz9na_0T8FKKZ7e0pDyzyhzThLXp2aY2lrbmRSnx6oSvCyO4JnUxPYBkyYG0YCg-guS8ShaGsVLqFKj0GD-TPP4rkzeL38L_cCkDAQOBdMU7aQ2KhN8Y7bf7p30Vva51S3TNlB4qBW7fy3NYewkcIMo80',
-      ],
+      images: ['/images/products/kyle-sung-oQuP_XBjOMY-unsplash.jpg'],
+      modelUrl: '/models/laptop-2.glb',
       isActive: true,
     },
     {
@@ -130,12 +128,10 @@ async function main() {
         battery: '15 hours',
         weight: '2.3kg',
       },
-      images: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCfBzOCP2vn68Kpdjy6jLAVHecJua8WBUvzklJYaG92hQxA2fqCtDAU61_tg2VrF-lJ-bbBQH0B5SSjgIlNQoNc0c19LTZ2NMLPOBbPwqLDCMPcqLyYbrOLnF90I0ILbzcUGthDf_gcrndrylal0zY5dmXhB2eeokt_SiEKekybtFEiFjkGM_L4lFzIErjiPdbf4jo3U7ODurXKwLQ6PzEhtiHnEor2bwnBDmVMHMyqZho_lXE741hnVR_RdQw_vdvF4_1kjXxy6sc',
-      ],
+      images: ['/images/products/leap-design-rXGzpEeYAS0-unsplash.jpg'],
+      modelUrl: '/models/laptop-3.glb',
       isActive: true,
     },
-
     {
       name: 'VOLTEX CORE M1',
       slug: 'voltex-core-m1',
@@ -152,9 +148,8 @@ async function main() {
         battery: '20 hours',
         weight: '1.3kg',
       },
-      images: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCyI7-ImuvhirKSEp_Vdab-LR-cjS8eB7c5bcILrZs4QFmkCO2-C99wqjOYFbasP3GgZ3HTsKVKPfgGAMBsoxmVDGsA2DIGuffo6IpRuHhS5e5pk06XWIt7_jZdqy969o-UIPIoaGFSJEUqbmiM4_ZiZvnYvyNmY-32C-RBV3OMsP6SQ_8KnUbDsk75w2S_PRnHSMIgvnCVD7dzo7jZRwDxrsG8oh7CoON_LRI9KeHU-jB7zIXhDOxHB83KbaJdjy_74M3RPMhr-7U',
-      ],
+      images: ['/images/products/muneeb-ali-arshad-_FpedyKWiHY-unsplash.jpg'],
+      modelUrl: '/models/laptop-4.glb',
       isActive: true,
     },
     {
@@ -173,9 +168,8 @@ async function main() {
         battery: '12 hours',
         weight: '3.2kg',
       },
-      images: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuB4FTy9rsIL-5ecgUVc7VHSAbKAnV864xzenOi0KMYnpctjRpA0nGWA_xGdkOPrDl4Fpq2Pms98KyACbg2t7j4xKtwFI6b-XHi1NLD2FjKsJeiSLaUs0sRQuIHjLWPIcaA-qHQxOTwDeQlHqtwm-E62lBbObd-6D9Hh_EYuoCHy984BuimQqkNyHhcPKPDB07ch9s3Gqp04oQ0voDNXI3_r2JZDxWXxmdzpqTuIJo8LbK-LLsKUUHsiSZDanfb9einBbtBjtZ03vZ4',
-      ],
+      images: ['/images/products/leap-design-rXGzpEeYAS0-unsplash.jpg'],
+      modelUrl: '/models/laptop-2.glb',
       isActive: true,
     },
     {
@@ -194,9 +188,8 @@ async function main() {
         battery: '16 hours',
         weight: '0.99kg',
       },
-      images: [
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCD3E7-X0aLPyHv9bJHTkos5IdsnhBjvVIIOuefwLd2bhLVxDsOtvWVb4XFQxCeLeaKCReETi6ZLsvfwrh0-bP9ucbghlmawx9m_5r14ekgcOK-OtHTc6zcCMVpgebiNOvDwcKkyJc4kAsLLMZ4x_9pbKAJNb2CDVwIAEVPNrobqqAyUx07vrMxXuo7cbS8wg-yT1YoUq0QK7bXbl6k5cL3MwiCxs0OLLoidyDC619PwymGV7YA5DS2cvlUhwj9KAo9-SiLlqWxfLY',
-      ],
+      images: ['/images/products/ionela-mat-2WxnKStKQTs-unsplash.jpg'],
+      modelUrl: '/models/laptop-3.glb',
       isActive: true,
     },
   ]

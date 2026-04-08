@@ -1,0 +1,7 @@
+# Run these commands in order:
+
+npm install three @react-three/fiber @react-three/drei
+npm install @react-three/postprocessing postprocessing
+npm install @types/three
+
+# Verify no peer dependency errors after each install

@@ -1,154 +1,95 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 
 export default function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null)
   const ringRef = useRef<HTMLDivElement>(null)
-  const [cursorText, setCursorText] = useState('')
-  const [cursorState, setCursorState] = useState<'default' | 'link' | 'drag' | 'view'>('default')
   const mousePos = useRef({ x: 0, y: 0 })
   const ringPos = useRef({ x: 0, y: 0 })
-
-  // Check if touch device
-  const isTouchDevice =
-    typeof window !== 'undefined' &&
-    ('ontouchstart' in window || navigator.maxTouchDevices > 0)
+  const rafRef = useRef<number | null>(null)
+  const currentState = useRef<string>('default')
 
   useEffect(() => {
-    if (isTouchDevice) return
+    // Skip on touch devices
+    if (typeof window === 'undefined') return
+    if (window.matchMedia("(pointer: coarse)").matches) return
+
+    const dot = dotRef.current
+    const ring = ringRef.current
+    if (!dot || !ring) return
 
     const handleMouseMove = (e: MouseEvent) => {
       mousePos.current = { x: e.clientX, y: e.clientY }
-
-      // Move dot instantly
-      if (dotRef.current) {
-        dotRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
-      }
+      // Dot follows instantly
+      dot.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`
     }
 
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement
 
-      // Check for links and buttons
+      let newState = 'default'
       if (
         target.tagName === 'A' ||
         target.tagName === 'BUTTON' ||
         target.closest('a') ||
         target.closest('button')
       ) {
-        setCursorState('link')
-        setCursorText('CLICK')
+        newState = 'link'
+      } else if (target.tagName === 'CANVAS') {
+        newState = 'drag'
+      } else if (target.closest('[data-product-card]')) {
+        newState = 'view'
       }
-      // Check for 3D canvas
-      else if (target.tagName === 'CANVAS') {
-        setCursorState('drag')
-        setCursorText('DRAG')
-      }
-      // Check for product cards
-      else if (target.closest('[data-product-card]')) {
-        setCursorState('view')
-        setCursorText('VIEW')
-      } else {
-        setCursorState('default')
-        setCursorText('')
+
+      if (newState !== currentState.current) {
+        currentState.current = newState
+        updateCursorState(ring, dot, newState)
       }
     }
 
     const handleMouseDown = () => {
-      if (dotRef.current) {
-        gsap.to(dotRef.current, {
-          scale: 1.5,
-          duration: 0.1,
-          ease: 'power2.out',
-        })
-      }
+      gsap.to(dot, { scale: 0.5, duration: 0.1, ease: 'power2.out' })
+      gsap.to(ring, { scale: 0.8, duration: 0.1, ease: 'power2.out' })
     }
 
     const handleMouseUp = () => {
-      if (dotRef.current) {
-        gsap.to(dotRef.current, {
-          scale: 1,
-          duration: 0.1,
-          ease: 'power2.out',
-        })
-      }
+      gsap.to(dot, { scale: 1, duration: 0.2, ease: 'elastic.out(1, 0.5)' })
+      gsap.to(ring, { scale: 1, duration: 0.2, ease: 'elastic.out(1, 0.5)' })
     }
 
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('mouseover', handleMouseOver)
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    window.addEventListener('mouseover', handleMouseOver, { passive: true })
     window.addEventListener('mousedown', handleMouseDown)
     window.addEventListener('mouseup', handleMouseUp)
 
-    // Animate ring with lag
+    // Ring follows with smooth lag
     const animateRing = () => {
-      ringPos.current.x += (mousePos.current.x - ringPos.current.x) * 0.12
-      ringPos.current.y += (mousePos.current.y - ringPos.current.y) * 0.12
+      const dx = mousePos.current.x - ringPos.current.x
+      const dy = mousePos.current.y - ringPos.current.y
 
-      if (ringRef.current) {
-        ringRef.current.style.transform = `translate(${ringPos.current.x}px, ${ringPos.current.y}px)`
+      if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+        ringPos.current.x += dx * 0.12
+        ringPos.current.y += dy * 0.12
+        ring.style.transform = `translate(${ringPos.current.x}px, ${ringPos.current.y}px) translate(-50%, -50%)`
       }
 
-      requestAnimationFrame(animateRing)
+      rafRef.current = requestAnimationFrame(animateRing)
     }
 
-    animateRing()
+    rafRef.current = requestAnimationFrame(animateRing)
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseover', handleMouseOver)
       window.removeEventListener('mousedown', handleMouseDown)
       window.removeEventListener('mouseup', handleMouseUp)
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+      }
     }
-  }, [isTouchDevice])
-
-  // Animate ring based on state
-  useEffect(() => {
-    if (!ringRef.current || isTouchDevice) return
-
-    const ring = ringRef.current
-
-    switch (cursorState) {
-      case 'link':
-        gsap.to(ring, {
-          width: 48,
-          height: 48,
-          backgroundColor: 'rgba(0, 229, 255, 0.2)',
-          duration: 0.3,
-          ease: 'power2.out',
-        })
-        break
-      case 'drag':
-        gsap.to(ring, {
-          width: 48,
-          height: 48,
-          backgroundColor: 'rgba(0, 229, 255, 0.15)',
-          duration: 0.3,
-          ease: 'power2.out',
-        })
-        break
-      case 'view':
-        gsap.to(ring, {
-          width: 64,
-          height: 64,
-          backgroundColor: 'rgba(0, 229, 255, 0.15)',
-          duration: 0.3,
-          ease: 'power2.out',
-        })
-        break
-      default:
-        gsap.to(ring, {
-          width: 32,
-          height: 32,
-          backgroundColor: 'transparent',
-          duration: 0.3,
-          ease: 'power2.out',
-        })
-    }
-  }, [cursorState, isTouchDevice])
-
-  if (isTouchDevice) return null
+  }, [])
 
   return (
     <>
@@ -157,27 +98,70 @@ export default function CustomCursor() {
         ref={dotRef}
         className="fixed top-0 left-0 w-2 h-2 bg-white rounded-full pointer-events-none z-[9999] mix-blend-difference"
         style={{
-          transform: 'translate(-50%, -50%)',
-          opacity: cursorState === 'link' ? 0 : 1,
-          transition: 'opacity 0.3s',
+          transform: 'translate(-100px, -100px) translate(-50%, -50%)',
+          willChange: 'transform',
+          transition: 'width 0.3s, height 0.3s, opacity 0.3s',
         }}
       />
 
       {/* Ring */}
       <div
         ref={ringRef}
-        className="fixed top-0 left-0 w-8 h-8 border-2 border-white rounded-full pointer-events-none z-[9999] mix-blend-difference flex items-center justify-center"
+        className="fixed top-0 left-0 w-8 h-8 border border-white/50 rounded-full pointer-events-none z-[9999] mix-blend-difference"
         style={{
-          transform: 'translate(-50%, -50%)',
+          transform: 'translate(-100px, -100px) translate(-50%, -50%)',
+          willChange: 'transform',
+          transition: 'width 0.3s, height 0.3s, border-color 0.3s, background-color 0.3s',
         }}
-      >
-        {cursorText && (
-          <span className="font-mono text-[10px] text-white tracking-widest">{cursorText}</span>
-        )}
-        {cursorState === 'drag' && !cursorText && (
-          <span className="text-white text-sm">↻</span>
-        )}
-      </div>
+      />
     </>
   )
+}
+
+function updateCursorState(ring: HTMLDivElement, dot: HTMLDivElement, state: string) {
+  switch (state) {
+    case 'link':
+      gsap.to(ring, {
+        width: 48,
+        height: 48,
+        borderColor: 'rgba(0, 229, 255, 0.5)',
+        backgroundColor: 'rgba(0, 229, 255, 0.08)',
+        duration: 0.3,
+        ease: 'power2.out',
+      })
+      gsap.to(dot, { opacity: 0.3, duration: 0.2 })
+      break
+    case 'drag':
+      gsap.to(ring, {
+        width: 56,
+        height: 56,
+        borderColor: 'rgba(0, 229, 255, 0.4)',
+        backgroundColor: 'rgba(0, 229, 255, 0.05)',
+        duration: 0.3,
+        ease: 'power2.out',
+      })
+      gsap.to(dot, { opacity: 0.5, duration: 0.2 })
+      break
+    case 'view':
+      gsap.to(ring, {
+        width: 64,
+        height: 64,
+        borderColor: 'rgba(0, 229, 255, 0.5)',
+        backgroundColor: 'rgba(0, 229, 255, 0.06)',
+        duration: 0.3,
+        ease: 'power2.out',
+      })
+      gsap.to(dot, { opacity: 0.3, duration: 0.2 })
+      break
+    default:
+      gsap.to(ring, {
+        width: 32,
+        height: 32,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+        backgroundColor: 'transparent',
+        duration: 0.3,
+        ease: 'power2.out',
+      })
+      gsap.to(dot, { opacity: 1, duration: 0.2 })
+  }
 }

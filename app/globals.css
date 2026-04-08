@@ -4,6 +4,12 @@
 
 :root {
   /* Voltex Design System CSS Variables */
+  --font-primary: 'Inter', sans-serif;
+  --color-background: #050508;
+  --color-surface: #0d0d12;
+  --color-accent: #00e5ff;
+  --color-text: #f0f0f0;
+  --color-muted: rgba(240,240,240,0.4);
   --color-on-primary: #00363d;
   --color-secondary: #b3c5ff;
   --color-on-surface-variant: #bac9cc;
@@ -45,6 +51,7 @@
   --color-surface-variant: #32343e;
 }
 
+/* ============ BASE LAYER ============ */
 @layer base {
   * {
     @apply border-outline-variant/20;
@@ -54,6 +61,10 @@
     @apply bg-background text-on-background font-body antialiased;
     background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
     background-size: 40px 40px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -61,10 +72,50 @@
   }
 }
 
+/* Selection color */
+::selection {
+  @apply bg-primary-container text-on-primary;
+}
+
+/* Remove all default link underlines */
+a { 
+  text-decoration: none; 
+  color: inherit; 
+}
+
+/* ============ SCROLLBAR ============ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-surface-container-low;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-outline-variant;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary-container;
+}
+
+/* ============ COMPONENTS LAYER ============ */
 @layer components {
   /* Glass Panel Effect */
   .glass-panel {
-    @apply bg-surface-container-highest/60 backdrop-blur-xl border border-primary-container/20;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 0px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .glass-panel:hover {
+    border-color: rgba(0, 229, 255, 0.15);
   }
 
   /* Orb Backgrounds */
@@ -97,25 +148,11 @@
     animation: float 4s ease-in-out infinite;
   }
 
-  @keyframes float {
-    0%, 100% { 
-      transform: translateY(0) rotate(-5deg) scale(1); 
-    }
-    50% { 
-      transform: translateY(-20px) rotate(-3deg) scale(1.02); 
-    }
-  }
-
   /* Shimmer Effect */
   .shimmer {
     background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.2), transparent);
     background-size: 200% 100%;
     animation: shimmer 2s infinite;
-  }
-
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
   }
 
   /* Ticker Animation */
@@ -129,11 +166,6 @@
     animation: ticker 30s linear infinite;
   }
 
-  @keyframes ticker {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
   /* Glow Shadow */
   .glow-shadow {
     box-shadow: 0 0 40px rgba(0, 229, 255, 0.08);
@@ -142,43 +174,233 @@
   .glow-shadow-hover:hover {
     box-shadow: 0 0 30px rgba(0, 229, 255, 0.4);
   }
+
+  /* Accent line gradient */
+  .accent-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--color-accent) 50%, transparent 100%);
+  }
+
+  /* Magnetic button hover */
+  .magnetic-btn {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  }
+
+  .magnetic-btn:hover {
+    box-shadow: 0 0 30px rgba(0, 229, 255, 0.35);
+  }
+
+  /* Section reveal utility */
+  .reveal-section {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  .reveal-section.revealed {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }
 
+/* ============ UTILITIES LAYER ============ */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
 }
 
-/* Selection */
-::selection {
-  @apply bg-primary-container text-on-primary;
+/* ============ KEYFRAME ANIMATIONS ============ */
+
+/* Grain overlay */
+@keyframes grainShift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-2%, -3%); }
+  50% { transform: translate(3%, 1%); }
+  75% { transform: translate(-1%, 4%); }
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Scroll indicator */
+@keyframes scrollLine {
+  0% { transform: scaleY(0); transform-origin: top; opacity: 1; }
+  50% { transform: scaleY(1); transform-origin: top; }
+  51% { transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; opacity: 0; }
 }
 
-::-webkit-scrollbar-track {
-  @apply bg-surface-container-low;
+/* Shimmer for skeletons */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-outline-variant;
+/* Floating 3D */
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0) rotate(-5deg) scale(1); 
+  }
+  50% { 
+    transform: translateY(-20px) rotate(-3deg) scale(1.02); 
+  }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary-container;
+/* Ticker scroll */
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
-/* Performance Optimizations */
+/* Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Fade in up — staggered entrance */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade in down */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide in from left */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide in from right */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Glow pulse on accent elements */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 229, 255, 0.35);
+  }
+}
+
+/* Text glow pulse */
+@keyframes textGlowPulse {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(0, 229, 255, 0.6), 0 0 60px rgba(0, 229, 255, 0.2);
+  }
+}
+
+/* Border glow on cards */
+@keyframes borderGlow {
+  0%, 100% {
+    border-color: rgba(0, 229, 255, 0.1);
+  }
+  50% {
+    border-color: rgba(0, 229, 255, 0.4);
+  }
+}
+
+/* Scale in — for modals / overlays */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Floating particles */
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(20px);
+    opacity: 0;
+  }
+}
+
+/* Hero laptop float — smoother version */
+@keyframes heroFloat {
+  0%, 100% {
+    transform: perspective(1000px) rotateY(-8deg) rotateX(2deg) translateY(0px);
+  }
+  50% {
+    transform: perspective(1000px) rotateY(-8deg) rotateX(2deg) translateY(-15px);
+  }
+}
+
+/* Gradient background shift */
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Line draw — for underlines */
+@keyframes lineExpand {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ============ PERFORMANCE ============ */
 .will-change-transform {
   will-change: transform;
 }
 
-/* Accessibility: Reduced Motion */
+/* ============ ACCESSIBILITY ============ */
+
+/* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -221,4 +443,17 @@
 
 .skip-to-content:focus {
   top: 0;
+}
+
+/* ============ CUSTOM CURSOR STYLES ============ */
+/* Only hide default cursor when custom cursor is active */
+.custom-cursor-active * {
+  cursor: none !important;
+}
+
+/* Restore cursor on touch devices */
+@media (pointer: coarse) {
+  .custom-cursor-active * {
+    cursor: auto !important;
+  }
 }

@@ -1,0 +1,78 @@
+═══════════════════════════════════════════════════════════
+  ACTIVETHEORY UPGRADE - PACKAGE INSTALLATION
+═══════════════════════════════════════════════════════════
+
+STEP 1: Open Command Prompt (NOT PowerShell)
+─────────────────────────────────────────────────────────
+• Navigate to voltex folder in File Explorer
+• Click in the address bar
+• Type: cmd
+• Press Enter
+
+
+STEP 2: Run this command
+─────────────────────────────────────────────────────────
+
+npm install lenis @react-three/postprocessing
+
+
+STEP 3: Wait for installation to complete
+─────────────────────────────────────────────────────────
+You should see:
+✓ lenis installed
+✓ @react-three/postprocessing installed
+
+
+STEP 4: Start development server
+─────────────────────────────────────────────────────────
+
+npm run dev
+
+
+STEP 5: Open browser
+─────────────────────────────────────────────────────────
+http://localhost:3000
+
+
+═══════════════════════════════════════════════════════════
+  WHAT TO EXPECT
+═══════════════════════════════════════════════════════════
+
+✅ Smooth liquid scrolling (desktop only)
+✅ Custom magnetic cursor with dot + ring
+✅ Cursor changes label on hover (CLICK, VIEW, DRAG)
+✅ Page transitions with color sweep
+✅ Subtle WebGL distortion overlay
+✅ All existing functionality preserved
+
+
+═══════════════════════════════════════════════════════════
+  IF YOU SEE ERRORS
+═══════════════════════════════════════════════════════════
+
+Error: "npm is not recognized"
+→ Make sure you're using Command Prompt, not PowerShell
+
+Error: "Cannot find module 'lenis'"
+→ Packages not installed yet, run the npm install command
+
+Error: "PowerShell execution policy"
+→ You're using PowerShell - switch to Command Prompt
+
+
+═══════════════════════════════════════════════════════════
+  NEXT STEPS AFTER INSTALLATION
+═══════════════════════════════════════════════════════════
+
+1. Verify smooth scroll works (desktop only)
+2. Check custom cursor appears (desktop only)
+3. Test page transitions between routes
+4. Confirm no console errors
+
+Then we'll continue with:
+- Hero section rebuild
+- Product card enhancements
+- Horizontal scroll showcase
+
+
+═══════════════════════════════════════════════════════════
