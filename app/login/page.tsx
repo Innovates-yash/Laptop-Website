@@ -4,56 +4,22 @@ import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import PageWrapper from '@/components/layout/PageWrapper'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
-  // GSAP entrance animation
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
-
     const init = async () => {
       const { gsap } = await import('gsap')
-
-      gsap.from('.login-header', {
-        opacity: 0,
-        y: 30,
-        duration: 0.6,
-        ease: 'power2.out',
-      })
-
-      gsap.from('.login-form', {
-        opacity: 0,
-        y: 40,
-        duration: 0.7,
-        ease: 'power3.out',
-        delay: 0.15,
-      })
-
-      gsap.from('.login-field', {
-        opacity: 0,
-        x: -20,
-        duration: 0.4,
-        stagger: 0.1,
-        ease: 'power2.out',
-        delay: 0.3,
-      })
-
-      gsap.from('.login-extras', {
-        opacity: 0,
-        y: 20,
-        duration: 0.4,
-        stagger: 0.1,
-        ease: 'power2.out',
-        delay: 0.6,
-      })
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+      gsap.fromTo('.login-title', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, delay: 0.1 })
+      gsap.fromTo('.login-sub', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, delay: 0.2 })
+      gsap.fromTo('.login-box', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, delay: 0.3 })
     }
-
     init()
   }, [])
 
@@ -61,139 +27,122 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
-
-      if (result?.error) {
+      const res = await signIn('credentials', { email, password, redirect: false })
+      if (res?.error) {
         setError('Invalid email or password')
-        // Shake animation on error
         const { gsap } = await import('gsap')
-        gsap.to('.login-form', {
-          x: [-10, 10, -8, 8, -4, 4, 0],
-          duration: 0.4,
-          ease: 'power2.out',
-        })
+        gsap.fromTo('.login-box', { x: -8 }, { x: 0, duration: 0.4, ease: "elastic.out(1, 0.3)" })
       } else {
         router.push('/')
-        router.refresh()
       }
-    } catch (err) {
-      setError('An error occurred. Please try again.')
-    } finally {
-      setLoading(false)
+    } catch {
+      setError('Something went wrong')
     }
+    setLoading(false)
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "14px 18px", borderRadius: 12,
+    border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)",
+    color: "#fff", fontSize: 15, outline: "none",
+    transition: "border-color 0.2s",
+    fontFamily: "var(--font-inter), system-ui",
   }
 
   return (
-    <PageWrapper>
-      <div className="min-h-screen bg-surface flex items-center justify-center px-6 relative overflow-hidden">
-        {/* Background orbs */}
-        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[100px] pointer-events-none" />
+    <div style={{
+      minHeight: "100vh", background: "#050508",
+      display: "flex", flexDirection: "column", alignItems: "center",
+      justifyContent: "center", padding: "120px 24px 80px",
+    }}>
+      <h1 className="login-title" style={{
+        fontSize: "clamp(36px, 5vw, 52px)", fontWeight: 600, color: "#fff",
+        marginBottom: 8, opacity: 0, fontFamily: "var(--font-inter), system-ui",
+      }}>
+        Sign in
+      </h1>
+      <p className="login-sub" style={{
+        fontSize: 16, color: "rgba(255,255,255,0.4)", marginBottom: 40,
+        opacity: 0, fontFamily: "var(--font-inter), system-ui",
+      }}>
+        Access your VOLTEX account
+      </p>
 
-        <div className="w-full max-w-md relative z-10">
-          {/* Header */}
-          <div className="login-header text-center mb-12">
-            <div className="font-mono text-primary tracking-wide-tech text-xs mb-4">
-              // CUSTOMER ACCESS
-            </div>
-            <h1 className="font-syne font-extrabold text-5xl mb-4">
-              LOGIN
-            </h1>
-            <p className="font-body text-on-surface-variant">
-              Access your account to manage orders and preferences
+      <div className="login-box" style={{
+        width: "100%", maxWidth: 420,
+        background: "rgba(255,255,255,0.03)",
+        border: "0.5px solid rgba(255,255,255,0.08)",
+        borderRadius: 20, padding: 40,
+        opacity: 0,
+      }}>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          {error && (
+            <p style={{
+              fontSize: 14, color: "#ff4444", textAlign: "center",
+              padding: "10px", borderRadius: 8, background: "rgba(255,68,68,0.1)",
+            }}>
+              {error}
             </p>
+          )}
+          <div>
+            <label style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 6, display: "block" }}>
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="you@email.com"
+              required
+              style={inputStyle}
+              onFocus={e => e.currentTarget.style.borderColor = "rgba(0,229,255,0.4)"}
+              onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"}
+            />
           </div>
-
-          {/* Login Form */}
-          <div className="login-form glass-panel p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="bg-error/10 border border-error/40 text-error px-4 py-3 font-mono text-xs animate-[fadeInDown_0.3s_ease]">
-                  {error}
-                </div>
-              )}
-
-              <div className="login-field">
-                <label className="font-mono text-xs tracking-widest text-on-surface mb-2 block">
-                  EMAIL ADDRESS
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full bg-surface-container-low border border-outline-variant/30 px-4 py-3 font-body text-on-surface focus:border-primary focus:shadow-[0_0_0_1px_rgba(0,229,255,0.3)] focus:outline-none transition-all duration-300"
-                  placeholder="your@email.com"
-                />
-              </div>
-
-              <div className="login-field">
-                <label className="font-mono text-xs tracking-widest text-on-surface mb-2 block">
-                  PASSWORD
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full bg-surface-container-low border border-outline-variant/30 px-4 py-3 font-body text-on-surface focus:border-primary focus:shadow-[0_0_0_1px_rgba(0,229,255,0.3)] focus:outline-none transition-all duration-300"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="login-field w-full magnetic-btn bg-primary-container text-on-primary px-8 py-4 font-mono font-bold tracking-widest text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
-                    LOGGING IN...
-                  </span>
-                ) : 'LOGIN'}
-              </button>
-            </form>
-
-            <div className="login-extras mt-8 pt-8 border-t border-outline-variant/20 text-center">
-              <p className="font-body text-sm text-on-surface-variant mb-4">
-                Don't have an account?
-              </p>
-              <Link href="/register">
-                <button className="border border-outline-variant/30 text-on-surface px-8 py-3 font-mono tracking-widest text-xs hover:border-primary hover:text-primary transition-all duration-300">
-                  CREATE ACCOUNT
-                </button>
-              </Link>
-            </div>
-
-            <div className="login-extras mt-6 text-center">
-              <Link
-                href="/employee/login"
-                className="font-mono text-xs text-primary/70 hover:text-primary transition-colors"
-              >
-                Employee Login →
-              </Link>
-            </div>
+          <div>
+            <label style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 6, display: "block" }}>
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              style={inputStyle}
+              onFocus={e => e.currentTarget.style.borderColor = "rgba(0,229,255,0.4)"}
+              onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"}
+            />
           </div>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: "14px", borderRadius: 12, border: "none",
+              background: "#00e5ff", color: "#000", fontSize: 15,
+              fontWeight: 600, cursor: loading ? "wait" : "pointer",
+              opacity: loading ? 0.6 : 1, transition: "all 0.2s",
+              marginTop: 8, fontFamily: "var(--font-inter), system-ui",
+            }}
+          >
+            {loading ? "Signing in..." : "Sign in"}
+          </button>
+        </form>
 
-          {/* Demo Credentials */}
-          <div className="login-extras mt-8 glass-panel p-6">
-            <p className="font-mono text-xs tracking-widest text-primary/70 mb-3">
-              DEMO CREDENTIALS
-            </p>
-            <div className="space-y-2 font-mono text-xs text-on-surface-variant">
-              <p>Admin: admin@voltex.com / Admin@123</p>
-              <p>Employee: john.doe@voltex.com / Employee@123</p>
-            </div>
-          </div>
+        <div style={{
+          marginTop: 28, textAlign: "center",
+          borderTop: "0.5px solid rgba(255,255,255,0.06)",
+          paddingTop: 24,
+        }}>
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
+            Don&apos;t have an account?{' '}
+            <Link href="/register" style={{ color: "#00e5ff", textDecoration: "none" }}>
+              Create one
+            </Link>
+          </p>
         </div>
       </div>
-    </PageWrapper>
+    </div>
   )
 }

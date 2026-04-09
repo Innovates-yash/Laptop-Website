@@ -1,140 +1,193 @@
-'use client'
+"use client"
 
-import { useEffect, useRef } from 'react'
-import Link from 'next/link'
+import { useEffect, useRef } from "react"
+import Link from "next/link"
 
 export default function Footer() {
   const footerRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
-    const footer = footerRef.current
-    if (!footer) return
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const init = async () => {
+      const { gsap } = await import("gsap")
+      const { ScrollTrigger } = await import("gsap/ScrollTrigger")
+      gsap.registerPlugin(ScrollTrigger)
 
-    const observer = new IntersectionObserver(
-      async ([entry]) => {
-        if (entry.isIntersecting) {
-          const { gsap } = await import('gsap')
+      const footer = footerRef.current
+      if (!footer) return
 
-          gsap.from('.footer-brand', {
-            opacity: 0,
-            x: -30,
-            duration: 0.6,
-            ease: 'power2.out',
-          })
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
-          gsap.from('.footer-col', {
-            opacity: 0,
-            y: 30,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: 'power2.out',
-            delay: 0.2,
-          })
+      // Footer content reveal when scrolled into view
+      gsap.fromTo(".footer-brand",
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out",
+          scrollTrigger: { trigger: footer, start: "top 90%" } }
+      )
+      gsap.fromTo(".footer-col",
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out",
+          scrollTrigger: { trigger: footer, start: "top 85%" } }
+      )
+      gsap.fromTo(".footer-bottom",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5, delay: 0.3,
+          scrollTrigger: { trigger: footer, start: "top 85%" } }
+      )
+    }
 
-          gsap.from('.footer-bottom', {
-            opacity: 0,
-            y: 20,
-            duration: 0.4,
-            ease: 'power2.out',
-            delay: 0.5,
-          })
-
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    observer.observe(footer)
-    return () => observer.disconnect()
+    init()
   }, [])
 
+  const columns = [
+    {
+      title: "Products",
+      links: [
+        { label: "Gaming", href: "/products" },
+        { label: "Ultrabook", href: "/products" },
+        { label: "Creator", href: "/products" },
+        { label: "Compare", href: "/products" },
+      ],
+    },
+    {
+      title: "Support",
+      links: [
+        { label: "Contact Us", href: "/contact" },
+        { label: "Warranty", href: "/contact" },
+        { label: "Returns", href: "/contact" },
+        { label: "FAQ", href: "/contact" },
+      ],
+    },
+    {
+      title: "Company",
+      links: [
+        { label: "About", href: "/" },
+        { label: "Careers", href: "/" },
+        { label: "Press", href: "/" },
+        { label: "Blog", href: "/" },
+      ],
+    },
+  ]
+
   return (
-    <footer ref={footerRef} className="bg-surface-container-lowest border-t border-outline-variant/20 py-24 px-12 md:px-24">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-16">
+    <footer
+      ref={footerRef}
+      style={{
+        background: "#000",
+        borderTop: "0.5px solid rgba(255,255,255,0.06)",
+        padding: "80px 0 40px",
+        position: "relative",
+        zIndex: 1,
+      }}
+    >
+      <div style={{
+        maxWidth: 1200,
+        margin: "0 auto",
+        padding: "0 40px",
+        display: "grid",
+        gridTemplateColumns: "1.5fr repeat(3, 1fr)",
+        gap: 60,
+      }}
+        className="footer-grid"
+      >
         {/* Brand */}
-        <div className="footer-brand col-span-1 md:col-span-2">
-          <div className="font-syne font-extrabold tracking-tighter text-3xl text-primary mb-6">
+        <div className="footer-brand">
+          <h3 style={{
+            fontSize: 24,
+            fontWeight: 600,
+            color: "#fff",
+            marginBottom: 12,
+            fontFamily: "var(--font-inter), system-ui",
+          }}>
             VOLTEX
-          </div>
-          <p className="font-body text-on-surface-variant max-w-md leading-relaxed mb-8">
-            Engineering excellence meets uncompromising performance. Built for creators, gamers, and professionals who demand the impossible.
+          </h3>
+          <p style={{
+            fontSize: 14,
+            lineHeight: 1.6,
+            color: "rgba(255,255,255,0.4)",
+            maxWidth: 280,
+            fontFamily: "var(--font-inter), system-ui",
+          }}>
+            The ultimate machine. Reengineered for those who demand more.
           </p>
-          <div className="flex gap-4">
-            {['X', 'IN', 'GH'].map((label, i) => (
-              <a
-                key={i}
-                href="#"
-                className="w-10 h-10 border border-outline-variant hover:border-primary hover:bg-primary/5 transition-all duration-300 flex items-center justify-center font-mono text-[10px] tracking-widest text-on-surface-variant hover:text-primary"
-              >
-                {label}
-              </a>
-            ))}
+        </div>
+
+        {/* Link columns */}
+        {columns.map((col) => (
+          <div key={col.title} className="footer-col" style={{ opacity: 0 }}>
+            <h4 style={{
+              fontSize: 12,
+              fontWeight: 600,
+              letterSpacing: "2px",
+              textTransform: "uppercase" as const,
+              color: "rgba(255,255,255,0.5)",
+              marginBottom: 20,
+              fontFamily: "var(--font-inter), system-ui",
+            }}>
+              {col.title}
+            </h4>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {col.links.map((link) => (
+                <li key={link.label} style={{ marginBottom: 12 }}>
+                  <Link
+                    href={link.href}
+                    style={{
+                      fontSize: 14,
+                      color: "rgba(255,255,255,0.4)",
+                      textDecoration: "none",
+                      transition: "color 0.2s",
+                      fontFamily: "var(--font-inter), system-ui",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-
-        {/* Products */}
-        <div className="footer-col">
-          <h4 className="font-mono text-xs tracking-widest text-primary mb-6">PRODUCTS</h4>
-          <ul className="space-y-4">
-            {[
-              { href: '/products?category=gaming', label: 'Gaming Laptops' },
-              { href: '/products?category=creator', label: 'Creator Studio' },
-              { href: '/products?category=ultrabook', label: 'Ultrabooks' },
-              { href: '/products', label: 'All Products' },
-            ].map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="font-body text-sm text-on-surface-variant hover:text-primary transition-colors duration-300 relative group"
-                >
-                  {link.label}
-                  <span className="absolute -bottom-0.5 left-0 h-[1px] bg-primary/50 w-0 group-hover:w-full transition-all duration-300" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Support */}
-        <div className="footer-col">
-          <h4 className="font-mono text-xs tracking-widest text-primary mb-6">SUPPORT</h4>
-          <ul className="space-y-4">
-            {[
-              { href: '/contact', label: 'Contact Us' },
-              { href: '#', label: 'Warranty' },
-              { href: '#', label: 'Shipping' },
-              { href: '#', label: 'Returns' },
-            ].map((link, i) => (
-              <li key={i}>
-                <Link
-                  href={link.href}
-                  className="font-body text-sm text-on-surface-variant hover:text-primary transition-colors duration-300 relative group"
-                >
-                  {link.label}
-                  <span className="absolute -bottom-0.5 left-0 h-[1px] bg-primary/50 w-0 group-hover:w-full transition-all duration-300" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+        ))}
       </div>
 
-      {/* Bottom Bar */}
-      <div className="footer-bottom pt-12 border-t border-outline-variant/20 flex flex-col md:flex-row justify-between items-center gap-6">
-        <p className="font-mono text-[10px] tracking-widest text-outline">
-          © 2026 VOLTEX. ALL RIGHTS RESERVED.
+      {/* Bottom */}
+      <div
+        className="footer-bottom"
+        style={{
+          maxWidth: 1200,
+          margin: "60px auto 0",
+          padding: "20px 40px 0",
+          borderTop: "0.5px solid rgba(255,255,255,0.06)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 16,
+          opacity: 0,
+        }}
+      >
+        <p style={{
+          fontSize: 12,
+          color: "rgba(255,255,255,0.3)",
+          fontFamily: "var(--font-inter), system-ui",
+        }}>
+          © {new Date().getFullYear()} VOLTEX. All rights reserved.
         </p>
-        <div className="flex gap-8 font-mono text-[10px] tracking-widest">
-          {['PRIVACY', 'TERMS', 'COOKIES'].map((text) => (
-            <a
-              key={text}
-              href="#"
-              className="text-outline hover:text-primary transition-colors duration-300"
+        <div style={{ display: "flex", gap: 24 }}>
+          {["Privacy", "Terms", "Sitemap"].map((t) => (
+            <span
+              key={t}
+              style={{
+                fontSize: 12,
+                color: "rgba(255,255,255,0.3)",
+                cursor: "pointer",
+                transition: "color 0.2s",
+                fontFamily: "var(--font-inter), system-ui",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
             >
-              {text}
-            </a>
+              {t}
+            </span>
           ))}
         </div>
       </div>

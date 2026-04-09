@@ -1,272 +1,167 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import PageWrapper from '@/components/layout/PageWrapper'
-import { useCartStore } from '@/store/cartStore'
+import { useEffect } from 'react'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
-
-const RazorpayButton = dynamic(() => import('@/components/payment/RazorpayButton'), { ssr: false })
-const StripeWrapper = dynamic(() => import('@/components/payment/StripeWrapper'), { ssr: false })
+import Image from 'next/image'
+import { useCartStore } from '@/store/cartStore'
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCartStore()
-  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'stripe'>('razorpay')
-  const containerRef = useRef<HTMLDivElement>(null)
+  const items = useCartStore(s => s.items)
+  const removeItem = useCartStore(s => s.removeItem)
+  const updateQuantity = useCartStore(s => s.updateQuantity)
 
-  const safeItems = items ?? []
-
-  // GSAP entrance animation
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
-
     const init = async () => {
       const { gsap } = await import('gsap')
-
-      gsap.from('.cart-header', {
-        opacity: 0,
-        y: 30,
-        duration: 0.6,
-        ease: 'power2.out',
-      })
-
-      gsap.from('.cart-item', {
-        opacity: 0,
-        x: -40,
-        duration: 0.5,
-        stagger: 0.1,
-        ease: 'power2.out',
-        delay: 0.2,
-      })
-
-      gsap.from('.cart-summary', {
-        opacity: 0,
-        x: 40,
-        duration: 0.6,
-        ease: 'power2.out',
-        delay: 0.3,
-      })
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+      gsap.fromTo('.cart-title', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, delay: 0.1 })
+      gsap.fromTo('.cart-content', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, delay: 0.3 })
     }
-
     init()
   }, [])
 
-  if (safeItems.length === 0) {
-    return (
-      <PageWrapper>
-        <div className="min-h-screen bg-surface flex items-center justify-center">
-          <div className="text-center py-32">
-            <div className="w-32 h-32 mx-auto mb-8 relative">
-              <div className="absolute inset-0 border-2 border-outline-variant/20 rounded-full" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="material-symbols-outlined text-6xl text-outline">
-                  shopping_cart
-                </span>
-              </div>
-            </div>
-            <h2 className="font-syne font-bold text-4xl mb-4">Your Cart is Empty</h2>
-            <p className="font-body text-on-surface-variant mb-8 max-w-md mx-auto">
-              Looks like you haven't added any products yet. Explore our collection of high-performance laptops.
-            </p>
-            <Link href="/products">
-              <button className="magnetic-btn bg-primary-container text-on-primary px-10 py-5 font-mono font-bold tracking-widest text-xs transition-all">
-                BROWSE PRODUCTS
-              </button>
-            </Link>
-          </div>
-        </div>
-      </PageWrapper>
-    )
-  }
-
-  const totalAmount = getTotalPrice() * 1.1
+  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
   return (
-    <PageWrapper>
-      <div ref={containerRef} className="min-h-screen bg-surface">
-        {/* Header */}
-        <section className="cart-header py-20 px-12 md:px-24 border-b border-outline-variant/20">
-          <div className="font-mono text-primary tracking-wide-tech text-xs mb-4">
-            // YOUR SELECTION
-          </div>
-          <h1 className="font-syne font-extrabold text-6xl md:text-8xl mb-6">
-            SHOPPING CART
-          </h1>
-          <p className="font-body text-lg text-on-surface-variant">
-            {safeItems.length} {safeItems.length === 1 ? 'item' : 'items'} in your cart
-          </p>
-        </section>
+    <div style={{ minHeight: "100vh", background: "#050508", paddingTop: 120 }}>
+      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 40px 120px" }}>
+        <h1 className="cart-title" style={{
+          fontSize: "clamp(36px, 5vw, 52px)", fontWeight: 600, color: "#fff",
+          marginBottom: 48, opacity: 0, fontFamily: "var(--font-inter), system-ui",
+        }}>
+          Your Cart
+        </h1>
 
-        {/* Cart Content */}
-        <section className="py-16 px-12 md:px-24">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Cart Items */}
-            <div className="lg:col-span-2 space-y-6">
-              {safeItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="cart-item glass-panel p-8 flex flex-col md:flex-row gap-8 group hover:border-primary/20 transition-all duration-300"
-                >
-                  {/* Product Image */}
-                  <div className="w-full md:w-48 h-48 bg-surface-container-low border border-outline-variant/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {item.image ? (
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <span className="material-symbols-outlined text-4xl text-outline">
-                        laptop
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="flex-1">
-                    <h3 className="font-syne font-bold text-2xl mb-2 group-hover:text-primary transition-colors duration-300">{item.name}</h3>
-                    <p className="text-3xl text-primary font-semibold mb-6">
-                      ${item.price.toLocaleString()}
-                    </p>
-
-                    <div className="flex items-center gap-6">
-                      {/* Quantity Controls */}
-                      <div className="flex items-center border border-outline-variant/30">
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="px-4 py-2 hover:bg-surface-container-low transition-colors"
-                        >
-                          <span className="material-symbols-outlined text-sm">remove</span>
-                        </button>
-                        <span className="px-6 py-2 font-mono text-sm border-x border-outline-variant/30">
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="px-4 py-2 hover:bg-surface-container-low transition-colors"
-                        >
-                          <span className="material-symbols-outlined text-sm">add</span>
-                        </button>
-                      </div>
-
-                      {/* Remove Button */}
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="text-error hover:text-error/80 transition-colors flex items-center gap-2 font-mono text-xs"
-                      >
-                        <span className="material-symbols-outlined text-sm">delete</span>
-                        REMOVE
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Item Total */}
-                  <div className="text-right">
-                    <p className="font-mono text-xs text-on-surface-variant mb-2">SUBTOTAL</p>
-                    <p className="text-4xl text-primary font-semibold">
-                      ${(item.price * item.quantity).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-              {/* Clear Cart */}
-              <button
-                onClick={clearCart}
-                className="border border-error/50 text-error px-6 py-3 font-mono tracking-widest text-xs hover:bg-error hover:text-white transition-all duration-300"
-              >
-                CLEAR CART
-              </button>
+        <div className="cart-content" style={{ opacity: 0 }}>
+          {items.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "100px 0" }}>
+              <span className="material-symbols-outlined" style={{
+                fontSize: 64, color: "rgba(255,255,255,0.15)", marginBottom: 20, display: "block",
+              }}>
+                shopping_cart
+              </span>
+              <h2 style={{ fontSize: 28, fontWeight: 600, color: "#fff", marginBottom: 12 }}>
+                Your Cart is Empty
+              </h2>
+              <p style={{
+                fontSize: 16, color: "rgba(255,255,255,0.4)", marginBottom: 32, maxWidth: 400, margin: "0 auto 32px",
+              }}>
+                Looks like you haven&apos;t added any products yet.
+              </p>
+              <Link href="/products" style={{
+                display: "inline-block", padding: "14px 32px",
+                background: "#00e5ff", color: "#000", fontSize: 15,
+                fontWeight: 600, borderRadius: 28, textDecoration: "none",
+                transition: "background 0.2s",
+              }}>
+                Browse Products
+              </Link>
             </div>
-
-            {/* Order Summary & Payment */}
-            <div className="lg:col-span-1">
-              <div className="cart-summary glass-panel p-8 sticky top-32 space-y-8">
-                <h3 className="font-mono text-xs tracking-widest text-primary">
-                  ORDER SUMMARY
-                </h3>
-
-                <div className="space-y-4 pb-8 border-b border-outline-variant/20">
-                  <div className="flex justify-between font-body">
-                    <span className="text-on-surface-variant">Subtotal</span>
-                    <span className="text-on-surface">${getTotalPrice().toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between font-body">
-                    <span className="text-on-surface-variant">Shipping</span>
-                    <span className="text-primary font-mono text-sm">FREE</span>
-                  </div>
-                  <div className="flex justify-between font-body">
-                    <span className="text-on-surface-variant">Tax (estimated)</span>
-                    <span className="text-on-surface">${(getTotalPrice() * 0.1).toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-between pb-8 border-b border-outline-variant/20">
-                  <span className="font-mono text-sm tracking-widest">TOTAL</span>
-                  <span className="text-4xl text-primary font-bold">
-                    ${totalAmount.toLocaleString()}
-                  </span>
-                </div>
-
-                {/* Payment Method Selection */}
-                <div>
-                  <h4 className="font-mono text-xs tracking-widest text-on-surface mb-4">
-                    PAYMENT METHOD
-                  </h4>
-                  <div className="space-y-3">
-                    {(['razorpay', 'stripe'] as const).map((method) => (
+          ) : (
+            <div style={{ display: "flex", gap: 40, flexWrap: "wrap" }}>
+              {/* Items */}
+              <div style={{ flex: "1 1 500px" }}>
+                {items.map((item, i) => (
+                  <div key={i} style={{
+                    display: "flex", gap: 20, padding: "24px 0",
+                    borderBottom: "0.5px solid rgba(255,255,255,0.06)",
+                    alignItems: "center",
+                  }}>
+                    <div style={{
+                      width: 80, height: 80, borderRadius: 12, overflow: "hidden",
+                      position: "relative", background: "#0d0d14", flexShrink: 0,
+                    }}>
+                      {item.image && (
+                        <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} sizes="80px" />
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ fontSize: 16, fontWeight: 500, color: "#fff", marginBottom: 4 }}>
+                        {item.name}
+                      </h3>
+                      <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)" }}>
+                        ₹{item.price.toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <button
-                        key={method}
-                        onClick={() => setPaymentMethod(method)}
-                        className={`w-full p-4 border transition-all text-left ${
-                          paymentMethod === method
-                            ? 'border-primary bg-primary/5'
-                            : 'border-outline-variant/30 hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                            paymentMethod === method ? 'border-primary' : 'border-outline-variant'
-                          }`}>
-                            {paymentMethod === method && (
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                            )}
-                          </div>
-                          <span className="font-mono text-xs tracking-widest">
-                            {method.toUpperCase()}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
+                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        style={{
+                          width: 32, height: 32, borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)",
+                          background: "transparent", color: "#fff", cursor: "pointer", fontSize: 16,
+                        }}
+                      >−</button>
+                      <span style={{ fontSize: 15, color: "#fff", minWidth: 20, textAlign: "center" }}>
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        style={{
+                          width: 32, height: 32, borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)",
+                          background: "transparent", color: "#fff", cursor: "pointer", fontSize: 16,
+                        }}
+                      >+</button>
+                    </div>
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      style={{
+                        background: "none", border: "none", color: "rgba(255,255,255,0.3)",
+                        cursor: "pointer", fontSize: 13, transition: "color 0.2s",
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.color = "#ff4444"}
+                      onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}
+                    >
+                      Remove
+                    </button>
                   </div>
-                </div>
+                ))}
+              </div>
 
-                {/* Payment Button */}
-                <div>
-                  {paymentMethod === 'razorpay' ? (
-                    <RazorpayButton amount={totalAmount} />
-                  ) : (
-                    <StripeWrapper amount={totalAmount} />
-                  )}
+              {/* Summary */}
+              <div style={{
+                flex: "0 0 320px",
+                background: "rgba(255,255,255,0.03)",
+                border: "0.5px solid rgba(255,255,255,0.08)",
+                borderRadius: 20, padding: 32, alignSelf: "flex-start",
+              }}>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: "#fff", marginBottom: 24 }}>
+                  Order Summary
+                </h3>
+                <div style={{
+                  display: "flex", justifyContent: "space-between", marginBottom: 12,
+                  fontSize: 15, color: "rgba(255,255,255,0.5)",
+                }}>
+                  <span>Subtotal</span>
+                  <span>₹{total.toLocaleString("en-IN")}</span>
                 </div>
-
-                <Link href="/products">
-                  <button className="w-full border border-outline-variant/30 text-on-surface px-8 py-4 font-mono tracking-widest text-xs hover:border-primary hover:text-primary transition-all duration-300">
-                    CONTINUE SHOPPING
-                  </button>
-                </Link>
-
-                <div className="pt-8 border-t border-outline-variant/20 space-y-3">
-                  <div className="flex items-center gap-3 text-on-surface-variant text-sm">
-                    <span className="material-symbols-outlined text-sm text-primary">verified_user</span>
-                    <span className="font-body">Secure checkout</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-on-surface-variant text-sm">
-                    <span className="material-symbols-outlined text-sm text-primary">local_shipping</span>
-                    <span className="font-body">Free shipping on all orders</span>
-                  </div>
+                <div style={{
+                  display: "flex", justifyContent: "space-between", marginBottom: 24,
+                  fontSize: 15, color: "rgba(255,255,255,0.5)",
+                }}>
+                  <span>Shipping</span>
+                  <span style={{ color: "#00e5ff" }}>Free</span>
                 </div>
+                <div style={{
+                  display: "flex", justifyContent: "space-between",
+                  paddingTop: 16, borderTop: "0.5px solid rgba(255,255,255,0.1)",
+                  fontSize: 18, fontWeight: 600, color: "#fff",
+                }}>
+                  <span>Total</span>
+                  <span>₹{total.toLocaleString("en-IN")}</span>
+                </div>
+                <button style={{
+                  width: "100%", padding: "14px", marginTop: 24,
+                  background: "#00e5ff", color: "#000", fontSize: 15,
+                  fontWeight: 600, borderRadius: 12, border: "none",
+                  cursor: "pointer", transition: "background 0.2s",
+                }}>
+                  Checkout
+                </button>
               </div>
             </div>
-          </div>
-        </section>
+          )}
+        </div>
       </div>
-    </PageWrapper>
+    </div>
   )
 }

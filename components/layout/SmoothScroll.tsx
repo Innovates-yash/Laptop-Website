@@ -1,61 +1,39 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
+import { gsap } from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+
+gsap.registerPlugin(ScrollTrigger)
 
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
-  const lenisRef = useRef<any>(null)
-
   useEffect(() => {
-    // Disable smooth scroll on mobile/touch devices for better performance
-    if (window.matchMedia("(pointer: coarse)").matches) {
-      return
-    }
+    // Disable on mobile for better native scroll
+    if (window.innerWidth < 768) return
 
-    // Check for reduced motion preference
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return
-    }
+    let lenis: any
+    let rafId: number
 
-    // Lazy load Lenis only when needed
-    let cleanup: (() => void) | undefined
-
-    const initLenis = async () => {
+    const init = async () => {
       const Lenis = (await import("lenis")).default
-      const { gsap } = await import("gsap")
-      const { ScrollTrigger } = await import("gsap/ScrollTrigger")
 
-      gsap.registerPlugin(ScrollTrigger)
-
-      const lenis = new Lenis({
+      lenis = new Lenis({
         duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        orientation: "vertical",
+        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         smoothWheel: true,
-        wheelMultiplier: 1,
-        touchMultiplier: 2,
+        wheelMultiplier: 0.9,
       })
 
-      lenisRef.current = lenis
-
-      // Connect Lenis to GSAP ScrollTrigger
       lenis.on("scroll", ScrollTrigger.update)
 
-      // Use RAF instead of GSAP ticker for better performance
-      const raf = (time: number) => {
-        lenis.raf(time)
-        requestAnimationFrame(raf)
-      }
-      requestAnimationFrame(raf)
-
-      cleanup = () => {
-        lenis.destroy()
-      }
+      gsap.ticker.add((time) => lenis.raf(time * 1000))
+      gsap.ticker.lagSmoothing(0)
     }
 
-    initLenis()
+    init()
 
     return () => {
-      cleanup?.()
+      if (lenis) lenis.destroy()
     }
   }, [])
 

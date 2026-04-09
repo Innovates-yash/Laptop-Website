@@ -4,50 +4,28 @@ import { useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 
 export default function PageTransition({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
-  const overlayRef = useRef<HTMLDivElement>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
-  const isFirstRender = useRef(true)
+  const isFirst = useRef(true)
 
   useEffect(() => {
-    const overlay = overlayRef.current
-    const content = contentRef.current
-    if (!overlay || !content) return
+    const el = ref.current
+    if (!el) return
 
-    // Check for reduced motion
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      overlay.style.scaleX = '0'
-      content.style.opacity = '1'
+    // Skip first render — loading screen handles intro
+    if (isFirst.current) {
+      isFirst.current = false
+      el.style.opacity = "1"
+      el.style.transform = "translateY(0)"
       return
     }
 
-    // Skip the very first render (loading screen handles that)
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      content.style.opacity = '1'
-      overlay.style.transform = 'scaleX(0)'
-      return
-    }
-
-    // Page transition animation
     const animate = async () => {
-      const { gsap } = await import('gsap')
-
-      const tl = gsap.timeline()
-
-      // Overlay sweeps in then out
-      tl.set(overlay, { scaleX: 1, transformOrigin: "left center" })
-      tl.to(overlay, {
-        scaleX: 0,
-        transformOrigin: "right center",
-        duration: 0.6,
-        ease: "power3.inOut",
-      })
-      tl.fromTo(
-        content,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" },
-        "-=0.3"
+      const { gsap } = await import("gsap")
+      gsap.fromTo(
+        el,
+        { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, duration: 0.55, ease: "power3.out", delay: 0.05 }
       )
     }
 
@@ -55,23 +33,8 @@ export default function PageTransition({ children }: { children: React.ReactNode
   }, [pathname])
 
   return (
-    <div style={{ position: "relative" }}>
-      {/* Transition overlay */}
-      <div
-        ref={overlayRef}
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "linear-gradient(90deg, var(--color-accent, #00e5ff), var(--color-primary-fixed-dim, #00daf3))",
-          zIndex: 9990,
-          transformOrigin: "right center",
-          transform: "scaleX(0)",
-          pointerEvents: "none",
-        }}
-      />
-      <div ref={contentRef} style={{ opacity: 1 }}>
-        {children}
-      </div>
+    <div ref={ref} style={{ opacity: 1 }}>
+      {children}
     </div>
   )
 }

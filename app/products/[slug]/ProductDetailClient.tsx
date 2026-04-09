@@ -1,16 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import dynamic from 'next/dynamic'
-import PageWrapper from '@/components/layout/PageWrapper'
+import { useEffect } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { useCartStore } from '@/store/cartStore'
-import { gsap } from 'gsap'
-import { ModelLoadingSkeleton } from '@/components/3d/ModelLoadingSkeleton'
-
-const LaptopViewer360 = dynamic(() => import('@/components/3d/LaptopViewer360'), {
-  ssr: false,
-  loading: () => <ModelLoadingSkeleton />
-})
 
 interface Product {
   id: string
@@ -18,187 +11,193 @@ interface Product {
   slug: string
   description: string
   price: number
-  stock: number
+  originalPrice?: number | null
   category: string
-  specs: any
-  modelUrl: string | null
+  brand: string
   images: string[]
+  stock: number
+  specs?: any
 }
 
 export default function ProductDetailClient({ product }: { product: Product }) {
-  const [quantity, setQuantity] = useState(1)
-  const [fullscreen, setFullscreen] = useState(false)
-  const addItem = useCartStore((state) => state.addItem)
+  const addItem = useCartStore(s => s.addItem)
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from('.product-viewer', {
-        y: 100,
-        opacity: 0,
-        duration: 1,
-        ease: 'power3.out',
-      })
-      gsap.from('.product-name', {
-        x: -40,
-        opacity: 0,
-        duration: 0.6,
-        ease: 'power2.out',
-        delay: 0.3,
-      })
-      gsap.from('.product-price', {
-        opacity: 0,
-        y: 20,
-        duration: 0.4,
-        delay: 0.5,
-      })
-      gsap.from('.spec-row', {
-        opacity: 0,
-        x: -20,
-        duration: 0.4,
-        stagger: 0.05,
-        delay: 0.6,
-        ease: 'power2.out',
-      })
-      gsap.from('.product-cta', {
-        opacity: 0,
-        scale: 0.85,
-        duration: 0.5,
-        stagger: 0.1,
-        ease: 'back.out(1.4)',
-        delay: 0.8,
-      })
-    })
+    const init = async () => {
+      const { gsap } = await import('gsap')
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
 
-    return () => ctx.revert()
+      const tl = gsap.timeline()
+      tl.fromTo('.pd-image', { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out' })
+      tl.fromTo('.pd-category', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.4 }, '-=0.4')
+      tl.fromTo('.pd-name', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.2')
+      tl.fromTo('.pd-price', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.4 }, '-=0.2')
+      tl.fromTo('.pd-desc', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.4 }, '-=0.1')
+      tl.fromTo('.pd-spec', { opacity: 0, x: -15 }, { opacity: 1, x: 0, duration: 0.3, stagger: 0.06 }, '-=0.1')
+      tl.fromTo('.pd-cta', { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.4, stagger: 0.08, ease: 'back.out(1.4)' }, '-=0.1')
+    }
+    init()
   }, [])
 
   const handleAddToCart = () => {
     addItem({
+      id: product.id,
       productId: product.id,
       name: product.name,
       price: product.price,
-      quantity,
-      modelUrl: product.modelUrl || undefined,
-    })
-
-    gsap.to('.add-to-cart-btn', {
-      scale: 0.95,
-      duration: 0.1,
-      yoyo: true,
-      repeat: 1,
+      quantity: 1,
+      image: product.images?.[0] || '',
     })
   }
 
+  const specs = product.specs
+    ? (typeof product.specs === 'string' ? JSON.parse(product.specs) : product.specs)
+    : null
+
+  const mainImage = product.images?.[0] || '/images/products/ionela-mat-2WxnKStKQTs-unsplash.jpg'
+
   return (
-    <PageWrapper>
-      <div className="min-h-screen bg-surface">
-        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
-          {/* Left: 3D Viewer */}
-          <div className="product-viewer relative bg-surface-container-lowest flex items-center justify-center p-12">
-            <LaptopViewer360 
-              modelUrl={product.modelUrl || '/models/laptop-2.glb'}
-              fallbackImage={product.images[0]}
-            />
-            <button
-              onClick={() => setFullscreen(true)}
-              className="absolute bottom-8 right-8 bg-primary-container text-on-primary px-6 py-3 font-mono text-xs tracking-widest hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined text-sm">open_in_full</span>
-              VIEW IN 360°
-            </button>
+    <div style={{ minHeight: "100vh", background: "#050508", paddingTop: 100 }}>
+      <div style={{
+        maxWidth: 1200, margin: "0 auto", padding: "40px 40px 120px",
+        display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 80, alignItems: "start",
+      }}>
+        {/* Image */}
+        <div className="pd-image" style={{
+          position: "relative", height: 500, borderRadius: 20,
+          overflow: "hidden", background: "#0a0a14", opacity: 0,
+        }}>
+          <Image
+            src={mainImage}
+            alt={product.name}
+            fill
+            style={{ objectFit: "cover" }}
+            priority
+            sizes="55vw"
+          />
+        </div>
+
+        {/* Info */}
+        <div style={{ paddingTop: 20 }}>
+          <p className="pd-category" style={{
+            fontSize: 12, letterSpacing: "3px",
+            textTransform: "uppercase" as const,
+            color: "rgba(255,255,255,0.4)", marginBottom: 8, opacity: 0,
+            fontFamily: "var(--font-inter), system-ui",
+          }}>
+            {product.category} · {product.brand}
+          </p>
+
+          <h1 className="pd-name" style={{
+            fontSize: "clamp(32px, 4vw, 48px)", fontWeight: 600,
+            color: "#fff", lineHeight: 1.1, marginBottom: 20, opacity: 0,
+            fontFamily: "var(--font-inter), system-ui",
+          }}>
+            {product.name}
+          </h1>
+
+          <div className="pd-price" style={{
+            display: "flex", alignItems: "baseline", gap: 14, marginBottom: 24, opacity: 0,
+          }}>
+            <span style={{
+              fontSize: 32, fontWeight: 600, color: "#fff",
+              fontFamily: "var(--font-inter), system-ui",
+            }}>
+              ₹{product.price.toLocaleString("en-IN")}
+            </span>
+            {product.originalPrice && (
+              <span style={{
+                fontSize: 18, color: "rgba(255,255,255,0.35)",
+                textDecoration: "line-through",
+              }}>
+                ₹{product.originalPrice.toLocaleString("en-IN")}
+              </span>
+            )}
           </div>
 
-          {/* Right: Product Info */}
-          <div className="product-info p-12 md:p-24 flex flex-col justify-center">
-            <div className="font-mono text-primary tracking-wide-tech text-xs mb-4">
-              // {product.category.toUpperCase()}
-            </div>
-            
-            <h1 className="product-name font-syne font-extrabold text-5xl md:text-6xl mb-6">
-              {product.name}
-            </h1>
+          <p className="pd-desc" style={{
+            fontSize: 16, lineHeight: 1.7,
+            color: "rgba(255,255,255,0.5)", marginBottom: 32, opacity: 0,
+            fontFamily: "var(--font-inter), system-ui",
+          }}>
+            {product.description}
+          </p>
 
-            <div className="product-price font-bebas text-5xl text-primary mb-8">
-              ${product.price.toLocaleString()}
-            </div>
-
-            <p className="font-body text-lg text-on-surface-variant leading-relaxed mb-12">
-              {product.description}
-            </p>
-
-            {/* Specs Accordion */}
-            <div className="mb-12 space-y-4">
-              <details className="glass-panel p-6 group">
-                <summary className="font-mono text-xs tracking-widest cursor-pointer flex justify-between items-center">
-                  SPECIFICATIONS
-                  <span className="material-symbols-outlined group-open:rotate-180 transition-transform">
-                    expand_more
+          {/* Specs */}
+          {specs && typeof specs === 'object' && (
+            <div style={{ marginBottom: 32 }}>
+              <h3 style={{
+                fontSize: 14, fontWeight: 600, letterSpacing: "2px",
+                textTransform: "uppercase" as const,
+                color: "rgba(255,255,255,0.5)", marginBottom: 16,
+              }}>
+                Key Specs
+              </h3>
+              {Object.entries(specs).map(([key, val]) => (
+                <div key={key} className="pd-spec" style={{
+                  display: "flex", justifyContent: "space-between",
+                  padding: "12px 0",
+                  borderBottom: "0.5px solid rgba(255,255,255,0.06)",
+                  opacity: 0,
+                }}>
+                  <span style={{
+                    fontSize: 14, color: "rgba(255,255,255,0.45)",
+                    textTransform: "capitalize" as const,
+                  }}>
+                    {key}
                   </span>
-                </summary>
-                <div className="mt-6 space-y-3 font-body text-sm">
-                  {product.specs && Object.entries(product.specs).map(([key, value]) => (
-                    <div key={key} className="spec-row flex justify-between border-b border-outline-variant/20 pb-2">
-                      <span className="text-on-surface-variant">{key}</span>
-                      <span className="text-on-surface font-medium">{value as string}</span>
-                    </div>
-                  ))}
+                  <span style={{ fontSize: 14, color: "#fff", fontWeight: 500 }}>
+                    {String(val)}
+                  </span>
                 </div>
-              </details>
+              ))}
             </div>
+          )}
 
-            {/* Quantity & Add to Cart */}
-            <div className="flex gap-6 items-center mb-8">
-              <div className="product-cta flex items-center border border-outline-variant">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-4 py-3 hover:bg-surface-container-low transition-colors"
-                >
-                  <span className="material-symbols-outlined text-sm">remove</span>
-                </button>
-                <span className="px-6 py-3 font-mono text-sm border-x border-outline-variant">
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  className="px-4 py-3 hover:bg-surface-container-low transition-colors"
-                >
-                  <span className="material-symbols-outlined text-sm">add</span>
-                </button>
-              </div>
-
-              <button
-                onClick={handleAddToCart}
-                className="product-cta add-to-cart-btn flex-1 bg-primary-container text-on-primary px-8 py-4 font-mono font-bold tracking-widest text-xs hover:shadow-[0_0_30px_rgba(0,229,255,0.4)] transition-all flex items-center justify-center gap-3"
-              >
-                <span className="material-symbols-outlined">shopping_cart</span>
-                ADD TO CART
-              </button>
-            </div>
-
-            <p className="font-mono text-xs text-on-surface-variant">
-              {product.stock > 0 ? `${product.stock} units in stock` : 'Out of stock'}
-            </p>
+          {/* CTAs */}
+          <div style={{ display: "flex", gap: 16 }}>
+            <button
+              onClick={handleAddToCart}
+              className="pd-cta"
+              style={{
+                flex: 1, padding: "16px 28px", borderRadius: 14,
+                background: "#00e5ff", color: "#000", fontSize: 16,
+                fontWeight: 600, border: "none", cursor: "pointer",
+                transition: "background 0.2s, transform 0.2s", opacity: 0,
+                fontFamily: "var(--font-inter), system-ui",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#33ecff"; e.currentTarget.style.transform = "scale(1.02)" }}
+              onMouseLeave={e => { e.currentTarget.style.background = "#00e5ff"; e.currentTarget.style.transform = "scale(1)" }}
+            >
+              Add to Cart
+            </button>
+            <Link
+              href="/cart"
+              className="pd-cta"
+              style={{
+                flex: 1, padding: "16px 28px", borderRadius: 14,
+                background: "transparent", color: "#fff", fontSize: 16,
+                fontWeight: 500, border: "1px solid rgba(255,255,255,0.15)",
+                textDecoration: "none", textAlign: "center",
+                transition: "border-color 0.2s", opacity: 0,
+                fontFamily: "var(--font-inter), system-ui",
+              }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)"}
+              onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"}
+            >
+              Buy Now
+            </Link>
           </div>
+
+          {/* Stock */}
+          <p style={{
+            fontSize: 13, color: product.stock > 0 ? "rgba(0,229,255,0.6)" : "#ff4444",
+            marginTop: 16,
+          }}>
+            {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+          </p>
         </div>
       </div>
-
-      {/* Fullscreen Modal */}
-      {fullscreen && (
-        <div className="fixed inset-0 z-50 bg-surface/95 backdrop-blur-xl">
-          <button
-            onClick={() => setFullscreen(false)}
-            className="absolute top-8 right-8 z-10 w-12 h-12 border border-outline-variant hover:border-primary hover:bg-primary-container/10 transition-all flex items-center justify-center"
-          >
-            <span className="material-symbols-outlined">close</span>
-          </button>
-          <div className="w-full h-full p-12">
-            <LaptopViewer360 
-              modelUrl={product.modelUrl || '/models/laptop-2.glb'}
-              fallbackImage={product.images[0]}
-            />
-          </div>
-        </div>
-      )}
-    </PageWrapper>
+    </div>
   )
 }

@@ -1,283 +1,181 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import PageWrapper from '@/components/layout/PageWrapper'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-
-const enquirySchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-  productId: z.string().optional(),
-  message: z.string().min(10, 'Message must be at least 10 characters'),
-})
-
-type EnquiryForm = z.infer<typeof enquirySchema>
 
 export default function ContactClient() {
-  const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<EnquiryForm>({
-    resolver: zodResolver(enquirySchema),
-  })
-
-  // GSAP entrance animation
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
-
     const init = async () => {
       const { gsap } = await import('gsap')
-
-      gsap.from('.contact-header', {
-        opacity: 0,
-        y: 30,
-        duration: 0.6,
-        ease: 'power2.out',
-      })
-
-      gsap.from('.form-field', {
-        opacity: 0,
-        y: 25,
-        duration: 0.5,
-        stagger: 0.08,
-        ease: 'power2.out',
-        delay: 0.2,
-      })
-
-      gsap.from('.contact-info-card', {
-        opacity: 0,
-        x: 40,
-        duration: 0.5,
-        stagger: 0.1,
-        ease: 'power2.out',
-        delay: 0.3,
-      })
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+      gsap.fromTo('.ct-title', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, delay: 0.1 })
+      gsap.fromTo('.ct-sub', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, delay: 0.2 })
+      gsap.fromTo('.ct-form', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, delay: 0.3 })
+      gsap.fromTo('.ct-info', { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.5, stagger: 0.1, delay: 0.4 })
     }
-
     init()
   }, [])
 
-  const onSubmit = async (data: EnquiryForm) => {
-    setLoading(true)
-
-    try {
-      const response = await fetch('/api/enquiry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-
-      if (response.ok) {
-        setSubmitted(true)
-        reset()
-
-        const { gsap } = await import('gsap')
-        gsap.from('.success-message', {
-          scale: 0.8,
-          opacity: 0,
-          duration: 0.6,
-          ease: 'back.out(1.7)',
-        })
-      }
-    } catch (error) {
-      console.error('Failed to submit enquiry:', error)
-    } finally {
-      setLoading(false)
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('sending')
+    // Simulate
+    await new Promise(r => setTimeout(r, 1500))
+    setStatus('sent')
+    setForm({ name: '', email: '', subject: '', message: '' })
+    setTimeout(() => setStatus('idle'), 3000)
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "14px 18px", borderRadius: 12,
+    border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)",
+    color: "#fff", fontSize: 15, outline: "none",
+    transition: "border-color 0.2s",
+    fontFamily: "var(--font-inter), system-ui",
+    boxSizing: "border-box",
+  }
+
+  const infoCards = [
+    { icon: "mail", title: "Email", value: "hello@voltex.in" },
+    { icon: "call", title: "Phone", value: "+91 80-4567-8901" },
+    { icon: "location_on", title: "Office", value: "Bengaluru, India" },
+    { icon: "schedule", title: "Hours", value: "Mon-Fri 10am-6pm IST" },
+  ]
+
   return (
-    <PageWrapper>
-      <div className="min-h-screen bg-surface">
-        <section className="contact-header py-20 px-12 md:px-24 border-b border-outline-variant/20">
-          <div className="font-mono text-primary tracking-wide-tech text-xs mb-4">
-            // GET IN TOUCH
+    <div style={{ minHeight: "100vh", background: "#050508", paddingTop: 120 }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 40px 120px" }}>
+        {/* Header */}
+        <h1 className="ct-title" style={{
+          fontSize: "clamp(40px, 5vw, 64px)", fontWeight: 600, color: "#fff",
+          marginBottom: 12, opacity: 0, fontFamily: "var(--font-inter), system-ui",
+        }}>
+          Get in Touch
+        </h1>
+        <p className="ct-sub" style={{
+          fontSize: 17, color: "rgba(255,255,255,0.45)", maxWidth: 500,
+          marginBottom: 60, opacity: 0, fontFamily: "var(--font-inter), system-ui", lineHeight: 1.6,
+        }}>
+          Have a question? We&apos;d love to hear from you. Send us a message and we&apos;ll respond within 24 hours.
+        </p>
+
+        {/* Content */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 60 }}>
+          {/* Form */}
+          <div className="ct-form" style={{
+            background: "rgba(255,255,255,0.03)",
+            border: "0.5px solid rgba(255,255,255,0.08)",
+            borderRadius: 20, padding: 40, opacity: 0,
+          }}>
+            {status === 'sent' ? (
+              <div style={{ textAlign: "center", padding: "60px 0" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 48, color: "#00e5ff", marginBottom: 16, display: "block" }}>
+                  check_circle
+                </span>
+                <h3 style={{ fontSize: 24, fontWeight: 600, color: "#fff", marginBottom: 8 }}>Message Sent</h3>
+                <p style={{ fontSize: 15, color: "rgba(255,255,255,0.45)" }}>
+                  We&apos;ll get back to you within 24 hours.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div>
+                    <label style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 6, display: "block" }}>Name</label>
+                    <input
+                      type="text" required value={form.name}
+                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                      placeholder="Your name" style={inputStyle}
+                      onFocus={e => e.currentTarget.style.borderColor = "rgba(0,229,255,0.4)"}
+                      onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 6, display: "block" }}>Email</label>
+                    <input
+                      type="email" required value={form.email}
+                      onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                      placeholder="you@email.com" style={inputStyle}
+                      onFocus={e => e.currentTarget.style.borderColor = "rgba(0,229,255,0.4)"}
+                      onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 6, display: "block" }}>Subject</label>
+                  <input
+                    type="text" required value={form.subject}
+                    onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
+                    placeholder="What's this about?" style={inputStyle}
+                    onFocus={e => e.currentTarget.style.borderColor = "rgba(0,229,255,0.4)"}
+                    onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 6, display: "block" }}>Message</label>
+                  <textarea
+                    required value={form.message}
+                    onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+                    placeholder="Tell us more..." rows={5}
+                    style={{ ...inputStyle, resize: "vertical" as const }}
+                    onFocus={e => e.currentTarget.style.borderColor = "rgba(0,229,255,0.4)"}
+                    onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"}
+                  />
+                </div>
+                <button
+                  type="submit" disabled={status === 'sending'}
+                  style={{
+                    padding: "14px", borderRadius: 12, border: "none",
+                    background: "#00e5ff", color: "#000", fontSize: 15,
+                    fontWeight: 600, cursor: status === 'sending' ? "wait" : "pointer",
+                    opacity: status === 'sending' ? 0.6 : 1, transition: "all 0.2s",
+                    fontFamily: "var(--font-inter), system-ui",
+                  }}
+                >
+                  {status === 'sending' ? "Sending..." : "Send Message"}
+                </button>
+              </form>
+            )}
           </div>
-          <h1 className="font-syne font-extrabold text-6xl md:text-8xl mb-6">
-            CONTACT US
-          </h1>
-          <p className="font-body text-lg text-on-surface-variant max-w-2xl">
-            Have questions about our products? Need a custom configuration? Our team is here to help you find the perfect laptop.
-          </p>
-        </section>
 
-        <section className="py-16 px-12 md:px-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            <div>
-              {!submitted ? (
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                  <div className="form-field">
-                    <label className="font-mono text-xs tracking-widest text-on-surface mb-3 block">
-                      FULL NAME *
-                    </label>
-                    <input
-                      {...register('name')}
-                      type="text"
-                      className="w-full bg-surface-container-low border border-outline-variant/30 px-6 py-4 font-body text-on-surface focus:border-primary focus:shadow-[0_0_0_1px_rgba(0,229,255,0.3)] focus:outline-none transition-all duration-300"
-                      placeholder="John Doe"
-                    />
-                    {errors.name && (
-                      <p className="text-error text-sm mt-2">{errors.name.message}</p>
-                    )}
-                  </div>
-
-                  <div className="form-field">
-                    <label className="font-mono text-xs tracking-widest text-on-surface mb-3 block">
-                      EMAIL ADDRESS *
-                    </label>
-                    <input
-                      {...register('email')}
-                      type="email"
-                      className="w-full bg-surface-container-low border border-outline-variant/30 px-6 py-4 font-body text-on-surface focus:border-primary focus:shadow-[0_0_0_1px_rgba(0,229,255,0.3)] focus:outline-none transition-all duration-300"
-                      placeholder="john@example.com"
-                    />
-                    {errors.email && (
-                      <p className="text-error text-sm mt-2">{errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <div className="form-field">
-                    <label className="font-mono text-xs tracking-widest text-on-surface mb-3 block">
-                      PHONE NUMBER *
-                    </label>
-                    <input
-                      {...register('phone')}
-                      type="tel"
-                      className="w-full bg-surface-container-low border border-outline-variant/30 px-6 py-4 font-body text-on-surface focus:border-primary focus:shadow-[0_0_0_1px_rgba(0,229,255,0.3)] focus:outline-none transition-all duration-300"
-                      placeholder="+1 (555) 000-0000"
-                    />
-                    {errors.phone && (
-                      <p className="text-error text-sm mt-2">{errors.phone.message}</p>
-                    )}
-                  </div>
-
-                  <div className="form-field">
-                    <label className="font-mono text-xs tracking-widest text-on-surface mb-3 block">
-                      INTERESTED IN (OPTIONAL)
-                    </label>
-                    <select
-                      {...register('productId')}
-                      className="w-full bg-surface-container-low border border-outline-variant/30 px-6 py-4 font-body text-on-surface focus:border-primary focus:shadow-[0_0_0_1px_rgba(0,229,255,0.3)] focus:outline-none transition-all duration-300"
-                    >
-                      <option value="">Select a product</option>
-                      <option value="nexus-16">VOLTEX NEXUS-16</option>
-                      <option value="aer-14">VOLTEX AER-14</option>
-                      <option value="studio-pro">VOLTEX STUDIO PRO</option>
-                      <option value="core-m1">VOLTEX CORE M1</option>
-                    </select>
-                  </div>
-
-                  <div className="form-field">
-                    <label className="font-mono text-xs tracking-widest text-on-surface mb-3 block">
-                      MESSAGE *
-                    </label>
-                    <textarea
-                      {...register('message')}
-                      rows={6}
-                      className="w-full bg-surface-container-low border border-outline-variant/30 px-6 py-4 font-body text-on-surface focus:border-primary focus:shadow-[0_0_0_1px_rgba(0,229,255,0.3)] focus:outline-none transition-all duration-300 resize-none"
-                      placeholder="Tell us about your requirements..."
-                    />
-                    {errors.message && (
-                      <p className="text-error text-sm mt-2">{errors.message.message}</p>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="form-field w-full magnetic-btn bg-primary-container text-on-primary px-8 py-5 font-mono font-bold tracking-widest text-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
-                        SENDING...
-                      </>
-                    ) : (
-                      <>
-                        <span className="material-symbols-outlined">send</span>
-                        SEND MESSAGE
-                      </>
-                    )}
-                  </button>
-                </form>
-              ) : (
-                <div className="success-message glass-panel p-12 text-center">
-                  <div className="w-20 h-20 bg-primary/10 border border-primary/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="material-symbols-outlined text-4xl text-primary">
-                      check_circle
-                    </span>
-                  </div>
-                  <h3 className="font-syne font-bold text-3xl mb-4">Message Sent!</h3>
-                  <p className="font-body text-on-surface-variant mb-8">
-                    Thank you for contacting us. Our team will get back to you within 24 hours.
+          {/* Info */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {infoCards.map(c => (
+              <div key={c.title} className="ct-info" style={{
+                padding: "24px 28px", borderRadius: 16,
+                background: "rgba(255,255,255,0.03)",
+                border: "0.5px solid rgba(255,255,255,0.06)",
+                display: "flex", alignItems: "center", gap: 16,
+                opacity: 0,
+              }}>
+                <span className="material-symbols-outlined" style={{
+                  fontSize: 24, color: "#00e5ff", opacity: 0.7,
+                }}>
+                  {c.icon}
+                </span>
+                <div>
+                  <p style={{
+                    fontSize: 12, letterSpacing: "2px",
+                    textTransform: "uppercase" as const,
+                    color: "rgba(255,255,255,0.4)",
+                    marginBottom: 4, fontFamily: "var(--font-inter), system-ui",
+                  }}>
+                    {c.title}
                   </p>
-                  <button
-                    onClick={() => setSubmitted(false)}
-                    className="border border-primary text-primary px-8 py-3 font-mono tracking-widest text-xs hover:bg-primary/5 transition-all duration-300"
-                  >
-                    SEND ANOTHER MESSAGE
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-6">
-              {[
-                {
-                  icon: 'location_on',
-                  title: 'HEADQUARTERS',
-                  content: '123 Tech Boulevard\nSilicon Valley, CA 94025\nUnited States',
-                },
-                {
-                  icon: 'mail',
-                  title: 'EMAIL',
-                  content: 'support@voltex.com\nsales@voltex.com',
-                },
-                {
-                  icon: 'phone',
-                  title: 'PHONE',
-                  content: '+1 (800) VOLTEX-1\nMon-Fri: 9AM - 6PM PST',
-                },
-              ].map((info, i) => (
-                <div key={i} className="contact-info-card glass-panel p-8 hover:border-primary/20 transition-all duration-300">
-                  <div className="flex items-start gap-6">
-                    <div className="w-12 h-12 border border-primary/20 flex items-center justify-center flex-shrink-0">
-                      <span className="material-symbols-outlined text-primary">{info.icon}</span>
-                    </div>
-                    <div>
-                      <h4 className="font-mono text-xs tracking-widest text-primary mb-2">{info.title}</h4>
-                      <p className="font-body text-on-surface whitespace-pre-line">{info.content}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <div className="contact-info-card glass-panel p-8">
-                <h4 className="font-mono text-xs tracking-widest text-primary mb-4">FOLLOW US</h4>
-                <div className="flex gap-4">
-                  {['X', 'IN', 'GH'].map((label, i) => (
-                    <a
-                      key={i}
-                      href="#"
-                      className="w-10 h-10 border border-outline-variant/30 hover:border-primary hover:bg-primary/5 transition-all duration-300 flex items-center justify-center font-mono text-[10px] tracking-widest text-on-surface-variant hover:text-primary"
-                    >
-                      {label}
-                    </a>
-                  ))}
+                  <p style={{
+                    fontSize: 15, color: "#fff", fontWeight: 500,
+                    fontFamily: "var(--font-inter), system-ui",
+                  }}>
+                    {c.value}
+                  </p>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
-        </section>
+        </div>
       </div>
-    </PageWrapper>
+    </div>
   )
 }
