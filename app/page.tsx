@@ -8,8 +8,8 @@ import { SpecReveal } from "@/components/ui/SpecReveal"
 import { MarqueeTicker } from "@/components/ui/MarqueeTicker"
 import { ProductCard } from "@/components/ui/ProductCard"
 
-import { StickyProductSection } from "@/components/sections/StickyProductSection"
-import { FeatureScroll } from "@/components/sections/FeatureScroll"
+import { InnovationShowcase } from "@/components/sections/InnovationShowcase"
+import { FeatureCards } from "@/components/sections/FeatureCards"
 
 // Product data
 const products = [
@@ -291,11 +291,11 @@ export default function Home() {
       {/* ═══════ MARQUEE TICKER ═══════ */}
       <MarqueeTicker />
 
-      {/* ═══════ STICKY LAPTOP + SCROLL PANELS ═══════ */}
-      <StickyProductSection />
+      {/* ═══════ INNOVATION SHOWCASE ═══════ */}
+      <InnovationShowcase />
 
-      {/* ═══════ HORIZONTAL FEATURE SCROLL ═══════ */}
-      <FeatureScroll />
+      {/* ═══════ FEATURE CARDS ═══════ */}
+      <FeatureCards />
 
       {/* ═══════ SPEC NUMBERS ═══════ */}
       <section style={{
