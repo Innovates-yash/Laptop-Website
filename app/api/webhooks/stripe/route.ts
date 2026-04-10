@@ -63,7 +63,7 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
         total,
         paymentId: paymentIntent.id,
         paymentMethod: 'STRIPE',
-        orderItems: {
+        items: {
           create: items.map((item: any) => ({
             productId: item.productId,
             quantity: item.quantity,
@@ -72,7 +72,7 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
         },
       },
       include: {
-        orderItems: {
+        items: {
           include: {
             product: true,
           },
@@ -108,7 +108,7 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
             <p><strong>Total:</strong> $${order.total.toFixed(2)}</p>
             <h3>Items:</h3>
             <ul>
-              ${order.orderItems.map(item => `
+              ${order.items.map((item: any) => `
                 <li>${item.product.name} x ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}</li>
               `).join('')}
             </ul>

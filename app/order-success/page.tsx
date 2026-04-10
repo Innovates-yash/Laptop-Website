@@ -11,7 +11,7 @@ interface Order {
   total: number
   status: string
   createdAt: string
-  orderItems: Array<{
+  items: Array<{
     id: string
     quantity: number
     price: number
@@ -179,7 +179,7 @@ export default function OrderSuccessPage() {
             </h2>
 
             <div className="space-y-6 mb-8 pb-8 border-b border-outline-variant/20">
-              {order.orderItems.map((item) => (
+              {order.items.map((item) => (
                 <div key={item.id} className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="font-syne font-bold text-xl mb-1">

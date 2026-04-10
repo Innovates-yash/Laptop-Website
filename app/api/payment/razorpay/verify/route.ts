@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         total,
         paymentId: razorpay_payment_id,
         paymentMethod: 'RAZORPAY',
-        orderItems: {
+        items: {
           create: items.map((item: any) => ({
             productId: item.productId,
             quantity: item.quantity,
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         },
       },
       include: {
-        orderItems: {
+        items: {
           include: {
             product: true,
           },
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
             <p><strong>Total:</strong> $${order.total.toFixed(2)}</p>
             <h3>Items:</h3>
             <ul>
-              ${order.orderItems.map(item => `
+              ${order.items.map((item: any) => `
                 <li>${item.product.name} x ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}</li>
               `).join('')}
             </ul>
