@@ -10,7 +10,7 @@ export default function Navbar() {
   const pathname = usePathname()
   const { data: session } = useSession()
   const cartCount = useCartStore((s) => s.items.length)
-  const navRef = useRef<HTMLNavigationElement>(null)
+  const navRef = useRef<HTMLElement>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {

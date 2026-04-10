@@ -23,7 +23,7 @@ function EnhancedProductCardComponent({
   slug,
   index = 0
 }: EnhancedProductCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null)
+  const cardRef = useRef<HTMLAnchorElement>(null)
   const imageRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const viewTextRef = useRef<HTMLDivElement>(null)

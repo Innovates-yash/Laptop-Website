@@ -13,7 +13,7 @@ interface Product {
   price: number
   originalPrice?: number | null
   category: string
-  brand: string
+  brand?: string
   images: string[]
   stock: number
   specs?: any

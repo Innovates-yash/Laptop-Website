@@ -4,11 +4,15 @@ import { useEffect, useState } from 'react'
 import ProductCard3D from './ProductCard3D'
 
 interface Props {
-  isHovered: boolean
-  fallbackImage: string
+  name: string
+  price: number
+  category: string
+  modelUrl?: string
+  slug?: string
+  image?: string
 }
 
-export default function ProductCard3DWrapper({ isHovered, fallbackImage }: Props) {
+export default function ProductCard3DWrapper(props: Props) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -31,5 +35,5 @@ export default function ProductCard3DWrapper({ isHovered, fallbackImage }: Props
     )
   }
 
-  return <ProductCard3D isHovered={isHovered} fallbackImage={fallbackImage} />
+  return <ProductCard3D {...props} />
 }
